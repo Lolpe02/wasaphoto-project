@@ -50,7 +50,7 @@ components:
         User:
           description: who put this like
           type: object
-          $ref: "#/components/schemas/User"
+          $ref: "#/components/schemas/User/properties/id"
         date:
           description: when this upvote was sent
           type: string
@@ -63,8 +63,7 @@ components:
         User:
           description: who wrote this comment
           type: object
-          $ref: "#/components/schemas/User"
-          example: "I wish I knew how to write an api"
+          $ref: "#/components/schemas/User/properties/id"
         date:
           description: when this comment was sent
           type: string
@@ -72,6 +71,7 @@ components:
         content:
           description: user's input string
           type: string
+          example: "I wish I knew how to write an api"
     User:
       title: User
       description: this object is a single user
@@ -240,10 +240,6 @@ paths:
           required: true
           schema:
             type: string  
-      requestBody:
-        content:
-          application/json:
-            schema: {$ref: "#/components/schemas/User"}
       responses:
         "201":
           description: user banned
@@ -261,10 +257,6 @@ paths:
           required: true
           schema:
             type: string  
-      requestBody:
-        content:
-          application/json:
-            schema: {$ref: "#/components/schemas/User"}
       responses:
         "200":
           description: user unbanned
@@ -371,10 +363,6 @@ paths:
           required: true
           schema:
             type: string  
-      requestBody:
-        content:
-          application/json:
-            schema: {$ref: "#/components/schemas/User"}
       responses:
         "200":
           description: user unfollowed
