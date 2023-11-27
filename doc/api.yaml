@@ -3,26 +3,32 @@ info:
   title: "WasaPhoto"
   version: 1.0.0
   description: api for "WasaPhoto" project
-components: 
+
+components:
   schemas:
+    identifier:
+      description: identifier of an object
+      type: string
+      example: "1a76Vr4"
+      minLength: 4
+      maxLength: 10
+      pattern: "^[a-zA-Z0-9_-]{4,10}$"
+      readOnly: true
     Post:
       title: Post
-      description: this is the post object, whit an image and informations
+      description: this is the post object, with an image and meta informations
       type: object
       required:
         - "photo"
         - "time"
       properties:
+        
         photo:
           description: your image
-          type: object 
-          format: image/png
-          
-        id:
-          description: identifier of the post
           type: string
-          example: "1376234"
-          readOnly: true
+          format: binary
+        id:
+          $ref: "#/components/schemas/identifier"
         time:
           description: when the post was uploaded
           type: string
@@ -49,8 +55,7 @@ components:
       properties:
         User:
           description: who put this like
-          type: object
-          $ref: "#/components/schemas/User/properties/id"
+          $ref: "#/components/schemas/identifier"
         date:
           description: when this upvote was sent
           type: string
@@ -62,8 +67,7 @@ components:
       properties:
         User:
           description: who wrote this comment
-          type: object
-          $ref: "#/components/schemas/User/properties/id"
+          $ref: "#/components/schemas/identifier"
         date:
           description: when this comment was sent
           type: string
@@ -79,35 +83,31 @@ components:
       properties:
         id:
           description: identifier of user
-          type: string
-          example: "146284"
-          readOnly: true
+          $ref: "#/components/schemas/identifier"
         username:
           description: how the user will be recognized
           type: string
+          minLength: 1
+          maxLength: 20
+          pattern: 'ˆ.*?{1,20}$'
           example: "SkibidiSigma420"
-        status:
-          description: user Online status
-          type: boolean
-          example: 1
-          readOnly: true
         posted:
           description: list of user's post
           type: array
           items: 
-            $ref: "#/components/schemas/Post"
+            $ref: "#/components/schemas/Post/properties/id"
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Use Bearer token for authentication (JWT)
   responses:
     UnauthorizedError:
       description: Access token is missing or invalid
 security:
   - bearerAuth: []
-          
-        
+             
 paths:
   /session:
     post:
@@ -143,55 +143,61 @@ paths:
                   type: object
                   properties:
                     identifier:
-                      type: string
-                      example: "abcdef012345"  
+                      $ref: "#/components/schemas/identifier"
+                      example: "abCDef012345"
+                    uid:
+                      $ref: "#/components/schemas/identifier"
+                      example: abCDef012345"
         "500":
           description: something went wrong in the server
-  /Users/me/feed/:
-    get:
-      summary: watch your friends' photos
-      description: |
-        receive a stream of posts, picked only from people
-        you follow in anti-chronological order
-      operationId: getMyStream
-      responses:
-        "200":
-          description: feed successfully sent
+  /Users/{userId}/posted/{postId}/likes/:
+    post:
+        summary: place a like on the post
+        description: insert a like object in the like list of the post
+        operationId: likePhoto
+        tags: ["like"]
+        parameters:
+          - name: userId
+            in: path
+            schema: 
+              $ref: "#/components/schemas/identifier"
+            required: true
+          - name: postId
+            in: path
+            schema: 
+              $ref: "#/components/schemas/identifier"
+            required: true
+        requestBody:
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  {$ref: "#/components/schemas/Post"}
-        "404":
-          description: user has no follows
-        "500":
-          description: something went south, try later
-  /Users/{userId}/posted/{postId}/likes/:
-    put:
-      summary: place a like on the post
-      description: insert a like object in the like list of the post
-      operationId: likePhoto
-      requestBody:
-        content:
-          application/json:
-            schema: {$ref: "#/components/schemas/Like"}
-      responses:
-        "201":
-          description: like sent
-        "404":
-          description: post not found
-  /Users/{userId}/posted/{postId}/likes/{likeId}:
+              schema: {$ref: "#/components/schemas/Like"}
+        responses:
+          "201":
+            description: like sent
+          "404":
+            description: post not found
+  /Users/{userId}/posted/{postId}/likes/{yourId}:
     delete:
       summary: delete your like on the post
       description: remove a like object in the like list of the post
       operationId: unlikePhoto
+      tags: ["like"]
       parameters:
-        - in: path
+        - name: userId
+          in: path
+          schema: 
+            $ref: "#/components/schemas/identifier"
           required: true
-          name: likeId
+        - name: postId
+          in: path
+          schema: 
+            $ref: "#/components/schemas/identifier"
+          required: true
+        - name: yourId
+          in: path
+          required: true
           schema:
-            type: string
+            $ref: "#/components/schemas/identifier"
       responses:
         "200":
           description: like deleted
@@ -202,7 +208,20 @@ paths:
       summary: place a comment on the post
       description: insert a comment object in the comment list of the post
       operationId: commentPhoto
+      tags: ["comment"]
+      parameters:
+          - name: userId
+            in: path
+            schema: 
+              $ref: "#/components/schemas/identifier"
+            required: true
+          - name: postId
+            in: path
+            schema: 
+              $ref: "#/components/schemas/identifier"
+            required: true
       requestBody:
+        description: comment
         content:
           application/json:
             schema: {$ref: "#/components/schemas/Comment"}
@@ -211,22 +230,91 @@ paths:
           description: comment sent
         "404":
           description: post not found
-  /Users/{userId}/posted/{postId}/comments/{commentId}:
+  /Users/{userId}/posted/{postId}/comments/{yourId}:
     delete:
       summary: delete your comment on the post
       description: remove a comment object in the comment list of the post
       operationId: uncommentPhoto
+      tags: ["comment"]
       parameters:
-        - in: path
-          required: true
-          name: commentId
+        - name: yourId
+          in: path
           schema:
-            type: string
+            $ref: "#/components/schemas/identifier"
+          required: true   
+        - name: userId
+          in: path
+          schema: 
+            $ref: "#/components/schemas/identifier"
+          required: true
+        - name: postId
+          in: path
+          schema: 
+            $ref: "#/components/schemas/identifier"
+          required: true
       responses:
         "200":
           description: comment deleted
         "404":
           description: post not found  
+  /Users/{userId}:
+    patch:
+      summary: change your username
+      description: change your username, it must be valid
+      operationId: setMyUserName
+      tags: ["username"]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The id username of the user to update
+          schema:
+            $ref: "#/components/schemas/identifier"
+      requestBody:
+        description: String payload for updating the resource
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Successful update
+        "401":
+          description: you don't have authorization
+        "403":
+          description: forbidden 
+        "404":
+          description: user doesn't exist
+  /Users/:
+    get:
+      summary: get a user profile
+      description: | 
+        receive a user profile, made of:
+        - username
+        - posts
+        - followed and following lists
+      operationId: getUserProfile
+      tags: ["profile"]
+      parameters:
+        - name: username to find
+          in: query
+          required: true
+          description: The name of the user to check
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+        "401":
+          description: you don't have authorization
+        "403":
+          description: forbidden 
+        "404":
+          description: user doesn't exist           
   /Users/me/muted/{bannedId}:
     put:
       summary: ban a user 
@@ -234,12 +322,14 @@ paths:
         insert a user in your list of banned people,
         they won't see your posts 
       operationId: banUser
+      tags: ["muted"]
       parameters:
-        - in: path
-          name: person
+        - name: bannedId
+          in: path
+          description: Id of the user you want to ban
           required: true
           schema:
-            type: string  
+            $ref: "#/components/schemas/identifier" 
       responses:
         "201":
           description: user banned
@@ -251,28 +341,56 @@ paths:
         delete a user in your banlist,
         they will see your posts again
       operationId: unbanUser
+      tags: ["muted", "unmute"]
       parameters:
-        - in: path
-          name: person
+        - name: bannedId
+          in: path
+          description: Id of the user you want to unban
           required: true
           schema:
-            type: string  
+            $ref: "#/components/schemas/identifier"
       responses:
         "200":
           description: user unbanned
         "404":
           description: user not found
-  /Users/me/posts:
+  /Users/me/mystream/:
+    get:
+      summary: watch your friends' photos
+      description: |
+        receive a stream of posts, picked only from people
+        you follow in anti-chronological order
+      operationId: getMyStream
+      tags: ["feed", "stream", "forYou"]
+      responses:
+        "200":
+          description: feed successfully sent
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  {$ref: "#/components/schemas/Post/properties/id"}
+        "404":
+          description: user has no follows
+        "500":
+          description: something went south, try later  
+  /Users/me/posts/:
     post:
       summary: create a new post
       description: |
         add an image to your profile, to be displayed
         in anti-chronological order
       operationId: uploadPhoto
+      tags: ["post", "upload", "create"]
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema: {$ref: "#/components/schemas/Post"}
+            #encoding:
+              #photo:
+                #contentType: image/png, image/jpeg
+
       responses:
         "201":
           description: Successful post
@@ -289,12 +407,14 @@ paths:
         delete a post from your profile, 
         given its id
       operationId: deletePhoto
+      tags: ["photo"]
       parameters:
         - in: path
           name: postId
           required: true
+          description: Id of photo you want to delete
           schema:
-            type: string
+            $ref: "#/components/schemas/identifier"
       responses:
         "201":
           description: post successfully deleted
@@ -312,12 +432,14 @@ paths:
         aquire a post from your profile, 
         given its id
       operationId: getPhoto
+      tags: ["photo"]
       parameters:
         - in: path
           name: postId
           required: true
+          description: photoId to get
           schema:
-            type: string
+            $ref: "#/components/schemas/identifier"
       responses:
         "201":
           description: post successfully retrieved
@@ -329,23 +451,25 @@ paths:
           description: post not found
         "500":
           description: something went south
-  /Users/me/follow/{followId}:
+  /Users/me/following/{followId}:
     put:
       summary: follow a user 
       description: |
         insert a user in your list of people you follow,
         you will see Their posts 
       operationId: followUser
+      tags: ["follow"]
       parameters:
-        - in: path
-          name: person
+        - name: followId
+          in: path
           required: true
+          description: uid to follow
           schema:
-            type: string  
+            $ref: "#/components/schemas/identifier" 
       requestBody:
         content:
           application/json:
-            schema: {$ref: "#/components/schemas/User"}
+            schema: {$ref: "#/components/schemas/User/properties/id"}
       responses:
         "201":
           description: user followed
@@ -357,72 +481,19 @@ paths:
         delete a user in your follow list,
         you won't see their posts again
       operationId: unfollowUser
+      tags: ["follow", "unfollow"]
       parameters:
-        - in: path
-          name: person
+        - name: followId
+          in: path
           required: true
+          description: uid to unfollow
           schema:
-            type: string  
+            $ref: "#/components/schemas/identifier" 
       responses:
         "200":
           description: user unfollowed
         "404":
           description: user not found
-  /Users/{uid}:
-    patch:
-      summary: change your username
-      description: change your username, it must be valid
-      operationId: setMyUserName
-      parameters:
-        - name: newusername
-          in: path
-          required: true
-          description: The new username of the user to update
-          schema:
-            type: string
-      requestBody:
-        description: String payload for updating the resource
-        required: true
-        content:
-          text/plain:
-            schema:
-              type: string
-      responses:
-        '200':
-          description: Successful update
-        "401":
-          description: you don't have authorization
-        "403":
-          description: forbidden 
-        "404":
-          description: user doesn't exist
-    get:
-      summary: get a user profile
-      description: | 
-        receiva a user profile, made of:
-        - username
-        - posts
-        - followed and following lists
-      operationId: getUserProfile
-      parameters:
-        - name: username to find
-          in: path
-          required: true
-          description: The name of the user to check
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful retrieval
-          content:
-            application/json:
-              schema: {$ref: "#/components/schemas/User"}
-        "401":
-          description: you don't have authorization
-        "403":
-          description: forbidden 
-        "404":
-          description: user doesn't exist
-              
+  
         
       
