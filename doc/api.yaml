@@ -135,6 +135,10 @@ paths:
       responses:
         "200":
           description: user already logged in
+          #content:
+            #application/json:
+              #schema:
+                #{$ref: "#/components/schemas/identifier"}
         '201':
           description: User log-in action successful
           content:
@@ -150,7 +154,8 @@ paths:
                       example: abCDef012345"
         "500":
           description: something went wrong in the server
-  /Users/{userId}/posted/{postId}/likes/:
+ 
+  /Images/{postId}/likes/:
     post:
         summary: place a like on the post
         description: insert a like object in the like list of the post
@@ -176,7 +181,7 @@ paths:
             description: like sent
           "404":
             description: post not found
-  /Users/{userId}/posted/{postId}/likes/{yourId}:
+  /Images/{postId}/likes/{yourId}:
     delete:
       summary: delete your like on the post
       description: remove a like object in the like list of the post
@@ -203,7 +208,7 @@ paths:
           description: like deleted
         "404":
           description: post not found      
-  /Users/{userId}/posted/{postId}/comments/:     
+  /Images/{postId}/comments/:     
     post:
       summary: place a comment on the post
       description: insert a comment object in the comment list of the post
@@ -230,7 +235,7 @@ paths:
           description: comment sent
         "404":
           description: post not found
-  /Users/{userId}/posted/{postId}/comments/{yourId}:
+  /Images/{postId}/comments/{yourId}:
     delete:
       summary: delete your comment on the post
       description: remove a comment object in the comment list of the post
@@ -311,10 +316,155 @@ paths:
               schema: {$ref: "#/components/schemas/User"}
         "401":
           description: you don't have authorization
+          $ref: '#/components/responses/UnauthorizedError'
         "403":
           description: forbidden 
         "404":
           description: user doesn't exist           
+  /Users/me/mystream/:
+    get:
+      summary: watch your friends' photos
+      description: |
+        receive a stream of posts, picked only from people
+        you follow in anti-chronological order
+      operationId: getMyStream
+      tags: ["feed", "stream", "forYou", "fyp"]
+      responses:
+        "200":
+          description: feed successfully sent
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  {$ref: "#/components/schemas/Post/properties/id"}
+                maxItems: 20
+        "404":
+          description: user has no follows
+        "500":
+          description: something went south, try later  
+  /Images/:
+    post:
+      summary: create a new post
+      description: |
+        add an image to your profile, to be displayed
+        in anti-chronological order
+      operationId: uploadPhoto
+      tags: ["post", "upload", "create"]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: {$ref: "#/components/schemas/Post"}
+            #encoding:
+              #photo:
+                #contentType: image/png, image/jpeg
+
+      responses:
+        "201":
+          description: Successful post
+        "401":
+          description: you don't have authorization
+          $ref: '#/components/responses/UnauthorizedError'
+        "403":
+          description: forbidden 
+        "500":
+          description: something went south
+  /Images/{postId}:
+    delete:
+      summary: delete one of your posts
+      description: |
+        delete a post from your profile, 
+        given its id
+      operationId: deletePhoto
+      tags: ["photo"]
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          description: Id of photo you want to delete
+          schema:
+            $ref: "#/components/schemas/identifier"
+      responses:
+        "201":
+          description: post successfully deleted
+        "401":
+          description: you don't have authorization
+          $ref: '#/components/responses/UnauthorizedError'
+        "403":
+          description: forbidden
+        "404":
+          description: post not found
+        "500":
+          description: something went south
+    get:
+      summary: get a post
+      description: aquire a post given its id
+      operationId: getPhoto
+      tags: ["photo"]
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          description: photoId to get
+          schema:
+            $ref: "#/components/schemas/identifier"
+      responses:
+        "201":
+          description: post successfully retrieved
+        "401":
+          description: you don't have authorization
+          $ref: '#/components/responses/UnauthorizedError'
+        "403":
+          description: forbidden
+        "404":
+          description: post not found
+        "500":
+          description: something went south
+  /Users/me/following/{followId}:
+    put:
+      summary: follow a user 
+      description: |
+        insert a user in your list of people you follow,
+        you will see Their posts 
+      operationId: followUser
+      tags: ["follow"]
+      parameters:
+        - name: followId
+          in: path
+          required: true
+          description: uid to follow
+          schema:
+            $ref: "#/components/schemas/identifier" 
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/User/properties/id"}
+      responses:
+        "201":
+          description: user followed
+        "204":
+          description: user blocked you
+        "404":
+          description: user not found
+    delete:
+      summary: unfollow a user 
+      description: |
+        delete a user in your follow list,
+        you won't see their posts again
+      operationId: unfollowUser
+      tags: ["follow", "unfollow"]
+      parameters:
+        - name: followId
+          in: path
+          required: true
+          description: uid to unfollow
+          schema:
+            $ref: "#/components/schemas/identifier" 
+      responses:
+        "204":
+          description: user unfollowed
+        "404":
+          description: user not found
   /Users/me/muted/{bannedId}:
     put:
       summary: ban a user 
@@ -352,146 +502,6 @@ paths:
       responses:
         "200":
           description: user unbanned
-        "404":
-          description: user not found
-  /Users/me/mystream/:
-    get:
-      summary: watch your friends' photos
-      description: |
-        receive a stream of posts, picked only from people
-        you follow in anti-chronological order
-      operationId: getMyStream
-      tags: ["feed", "stream", "forYou"]
-      responses:
-        "200":
-          description: feed successfully sent
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  {$ref: "#/components/schemas/Post/properties/id"}
-        "404":
-          description: user has no follows
-        "500":
-          description: something went south, try later  
-  /Users/me/posts/:
-    post:
-      summary: create a new post
-      description: |
-        add an image to your profile, to be displayed
-        in anti-chronological order
-      operationId: uploadPhoto
-      tags: ["post", "upload", "create"]
-      requestBody:
-        content:
-          multipart/form-data:
-            schema: {$ref: "#/components/schemas/Post"}
-            #encoding:
-              #photo:
-                #contentType: image/png, image/jpeg
-
-      responses:
-        "201":
-          description: Successful post
-        "401":
-          description: you don't have authorization
-        "403":
-          description: forbidden 
-        "500":
-          description: something went south
-  /Users/me/posts/{postId}:
-    delete:
-      summary: delete one of your posts
-      description: |
-        delete a post from your profile, 
-        given its id
-      operationId: deletePhoto
-      tags: ["photo"]
-      parameters:
-        - in: path
-          name: postId
-          required: true
-          description: Id of photo you want to delete
-          schema:
-            $ref: "#/components/schemas/identifier"
-      responses:
-        "201":
-          description: post successfully deleted
-        "401":
-          description: you don't have authorization
-        "403":
-          description: forbidden
-        "404":
-          description: post not found
-        "500":
-          description: something went south
-    get:
-      summary: get one of your posts
-      description: |
-        aquire a post from your profile, 
-        given its id
-      operationId: getPhoto
-      tags: ["photo"]
-      parameters:
-        - in: path
-          name: postId
-          required: true
-          description: photoId to get
-          schema:
-            $ref: "#/components/schemas/identifier"
-      responses:
-        "201":
-          description: post successfully retrieved
-        "401":
-          description: you don't have authorization
-        "403":
-          description: forbidden
-        "404":
-          description: post not found
-        "500":
-          description: something went south
-  /Users/me/following/{followId}:
-    put:
-      summary: follow a user 
-      description: |
-        insert a user in your list of people you follow,
-        you will see Their posts 
-      operationId: followUser
-      tags: ["follow"]
-      parameters:
-        - name: followId
-          in: path
-          required: true
-          description: uid to follow
-          schema:
-            $ref: "#/components/schemas/identifier" 
-      requestBody:
-        content:
-          application/json:
-            schema: {$ref: "#/components/schemas/User/properties/id"}
-      responses:
-        "201":
-          description: user followed
-        "404":
-          description: user not found
-    delete:
-      summary: unfollow a user 
-      description: |
-        delete a user in your follow list,
-        you won't see their posts again
-      operationId: unfollowUser
-      tags: ["follow", "unfollow"]
-      parameters:
-        - name: followId
-          in: path
-          required: true
-          description: uid to unfollow
-          schema:
-            $ref: "#/components/schemas/identifier" 
-      responses:
-        "200":
-          description: user unfollowed
         "404":
           description: user not found
   
