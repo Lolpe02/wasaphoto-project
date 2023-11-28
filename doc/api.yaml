@@ -134,11 +134,11 @@ paths:
         required: true
       responses:
         "200":
-          description: user already logged in
-          #content:
-            #application/json:
-              #schema:
-                #{$ref: "#/components/schemas/identifier"}
+          description: user already logged in, returned their own id
+          content:
+            application/json:
+              schema:
+                {$ref: "#/components/schemas/identifier"}
         '201':
           description: User log-in action successful
           content:
@@ -147,9 +147,11 @@ paths:
                   type: object
                   properties:
                     identifier:
+                      description: your token for this session
                       $ref: "#/components/schemas/identifier"
                       example: "abCDef012345"
                     uid:
+                      description: your new userId
                       $ref: "#/components/schemas/identifier"
                       example: abCDef012345"
         "500":
