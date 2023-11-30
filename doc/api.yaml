@@ -7,6 +7,7 @@ info:
 components:
   schemas:
     identifier:
+      title: Id
       description: identifier of an object
       type: string
       example: "1a76Vr4"
@@ -21,8 +22,8 @@ components:
       required:
         - "photo"
         - "time"
+        - "id"
       properties:
-        
         photo:
           description: your image
           type: string
@@ -43,18 +44,21 @@ components:
           type: array
           items: 
             $ref: "#/components/schemas/Like"
+          minItems: 0
+          maxItems: 10000
         comments:
           description: list of comments of the post
           type: array
           items: 
             $ref: "#/components/schemas/Comment"
+          minItems: 0
+          maxItems: 10000
     Like:
       title: Post upvote
       description: post upvote
       type: object
       properties:
         User:
-          description: who put this like
           $ref: "#/components/schemas/identifier"
         date:
           description: when this upvote was sent
@@ -66,7 +70,6 @@ components:
       type: object
       properties:
         User:
-          description: who wrote this comment
           $ref: "#/components/schemas/identifier"
         date:
           description: when this comment was sent
@@ -75,6 +78,9 @@ components:
         content:
           description: user's input string
           type: string
+          pattern: "^[a-zA-Z0-9_]+$"
+          minLength: 1
+          maxLength: 300
           example: "I wish I knew how to write an api"
     User:
       title: User
@@ -82,20 +88,21 @@ components:
       type: object
       properties:
         id:
-          description: identifier of user
           $ref: "#/components/schemas/identifier"
         username:
           description: how the user will be recognized
           type: string
           minLength: 1
-          maxLength: 20
-          pattern: 'ˆ.*?{1,20}$'
+          maxLength: 25
+          pattern: '.*?{1,25}$' #(.*?)
           example: "SkibidiSigma420"
         posted:
           description: list of user's post
           type: array
           items: 
             $ref: "#/components/schemas/Post/properties/id"
+          minItems: 0
+          maxItems: 10000
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
@@ -103,8 +110,42 @@ components:
       bearerFormat: JWT
       description: Use Bearer token for authentication (JWT)
   responses:
+    NotFound:
+      description: Content not found
+      content:
+        application/json:
+          schema:
+            type: string
+            minLength: 0
+            maxLength: 30
+            pattern: '.*?$' #(.*?)
+    OkDone:):
+      description: Ok
+      content:
+        application/json:
+          schema:
+            type: string
+            minLength: 0
+            maxLength: 30
+            pattern: '.*?$' #(.*?)
     UnauthorizedError:
       description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: string
+            minLength: 0
+            maxLength: 30
+            pattern: '.*?$' #(.*?)
+    ServerError:
+      description: something went wrong, try late or never again
+      content:
+        application/json:
+          schema:
+            type: string
+            minLength: 0
+            maxLength: 30
+            pattern: '.*?$' #(.*?)
 security:
   - bearerAuth: []
              
@@ -120,17 +161,16 @@ paths:
       operationId: doLogin
       requestBody:
         description: User details
+
         content:
           application/json:
             schema:
+              description: the name string
               type: object
               properties:
                 name:
-                  type: string
-                  example: Maria
-                  pattern: 'ˆ.*?$'
-                  minLength: 3
-                  maxLength: 16
+                  $ref: "#/components/schemas/User/properties/username"
+
         required: true
       responses:
         "200":
@@ -144,16 +184,13 @@ paths:
           content:
               application/json:
                 schema:
+                  description: you'll receive the token and uid
                   type: object
                   properties:
-                    identifier:
-                      description: your token for this session
+                    token:
                       $ref: "#/components/schemas/identifier"
-                      example: "abCDef012345"
                     uid:
-                      description: your new userId
                       $ref: "#/components/schemas/identifier"
-                      example: abCDef012345"
         "500":
           description: something went wrong in the server
  
@@ -165,7 +202,7 @@ paths:
         tags: ["like"]
         parameters:
           - name: userId
-            in: path
+            in: header
             schema: 
               $ref: "#/components/schemas/identifier"
             required: true
@@ -175,14 +212,24 @@ paths:
               $ref: "#/components/schemas/identifier"
             required: true
         requestBody:
+          description: like object
+          required: true
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Like"}
         responses:
           "201":
-            description: like sent
+            description: like created
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Like"
+          "403":
+            $ref: "#/components/responses/UnauthorizedError"
           "404":
-            description: post not found
+            $ref: "#/components/responses/NotFound"
+          "500":
+            $ref: "#/components/responses/ServerError"
   /Images/{postId}/likes/{yourId}:
     delete:
       summary: delete your like on the post
@@ -190,11 +237,6 @@ paths:
       operationId: unlikePhoto
       tags: ["like"]
       parameters:
-        - name: userId
-          in: path
-          schema: 
-            $ref: "#/components/schemas/identifier"
-          required: true
         - name: postId
           in: path
           schema: 
@@ -207,9 +249,13 @@ paths:
             $ref: "#/components/schemas/identifier"
       responses:
         "200":
-          description: like deleted
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: post not found      
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Images/{postId}/comments/:     
     post:
       summary: place a comment on the post
@@ -217,11 +263,6 @@ paths:
       operationId: commentPhoto
       tags: ["comment"]
       parameters:
-          - name: userId
-            in: path
-            schema: 
-              $ref: "#/components/schemas/identifier"
-            required: true
           - name: postId
             in: path
             schema: 
@@ -229,14 +270,19 @@ paths:
             required: true
       requestBody:
         description: comment
+        required: true
         content:
           application/json:
             schema: {$ref: "#/components/schemas/Comment"}
       responses:
         "201":
-          description: comment sent
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: post not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Images/{postId}/comments/{yourId}:
     delete:
       summary: delete your comment on the post
@@ -248,11 +294,6 @@ paths:
           in: path
           schema:
             $ref: "#/components/schemas/identifier"
-          required: true   
-        - name: userId
-          in: path
-          schema: 
-            $ref: "#/components/schemas/identifier"
           required: true
         - name: postId
           in: path
@@ -261,9 +302,13 @@ paths:
           required: true
       responses:
         "200":
-          description: comment deleted
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: post not found  
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Users/{userId}:
     patch:
       summary: change your username
@@ -283,16 +328,17 @@ paths:
         content:
           text/plain:
             schema:
-              type: string
+             $ref: "#/components/schemas/User/properties/username"
+ 
       responses:
-        '200':
-          description: Successful update
-        "401":
-          description: you don't have authorization
+        "200":
+          $ref: "#/components/responses/OkDone:)"
         "403":
-          description: forbidden 
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user doesn't exist
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Users/:
     get:
       summary: get a user profile
@@ -309,20 +355,20 @@ paths:
           required: true
           description: The name of the user to check
           schema:
-            type: string
+            $ref: "#/components/schemas/User/properties/username"
+
       responses:
-        '200':
+        "200":
           description: Successful retrieval
           content:
             application/json:
               schema: {$ref: "#/components/schemas/User"}
-        "401":
-          description: you don't have authorization
-          $ref: '#/components/responses/UnauthorizedError'
         "403":
-          description: forbidden 
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user doesn't exist           
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"           
   /Users/me/mystream/:
     get:
       summary: watch your friends' photos
@@ -337,14 +383,18 @@ paths:
           content:
             application/json:
               schema:
+                description: array of postIds to fetch after
                 type: array
                 items:
                   {$ref: "#/components/schemas/Post/properties/id"}
+                minItems: 0
                 maxItems: 20
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user has no follows
+          $ref: "#/components/responses/NotFound"
         "500":
-          description: something went south, try later  
+          $ref: "#/components/responses/ServerError"  
   /Images/:
     post:
       summary: create a new post
@@ -354,23 +404,23 @@ paths:
       operationId: uploadPhoto
       tags: ["post", "upload", "create"]
       requestBody:
+        required: true
+        description: upload your photo, with time
         content:
           multipart/form-data:
             schema: {$ref: "#/components/schemas/Post"}
             #encoding:
               #photo:
                 #contentType: image/png, image/jpeg
-
       responses:
         "201":
-          description: Successful post
-        "401":
-          description: you don't have authorization
-          $ref: '#/components/responses/UnauthorizedError'
+          $ref: "#/components/responses/OkDone:)"
         "403":
-          description: forbidden 
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
-          description: something went south
+          $ref: "#/components/responses/ServerError"
   /Images/{postId}:
     delete:
       summary: delete one of your posts
@@ -387,17 +437,16 @@ paths:
           schema:
             $ref: "#/components/schemas/identifier"
       responses:
-        "201":
-          description: post successfully deleted
+        "200":
+          $ref: "#/components/responses/OkDone:)"
         "401":
-          description: you don't have authorization
           $ref: '#/components/responses/UnauthorizedError'
         "403":
-          description: forbidden
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: post not found
+          $ref: "#/components/responses/NotFound"
         "500":
-          description: something went south
+          $ref: "#/components/responses/ServerError"
     get:
       summary: get a post
       description: aquire a post given its id
@@ -411,17 +460,14 @@ paths:
           schema:
             $ref: "#/components/schemas/identifier"
       responses:
-        "201":
-          description: post successfully retrieved
-        "401":
-          description: you don't have authorization
-          $ref: '#/components/responses/UnauthorizedError'
+        "200":
+          $ref: "#/components/responses/OkDone:)"
         "403":
-          description: forbidden
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: post not found
+          $ref: "#/components/responses/NotFound"
         "500":
-          description: something went south
+          $ref: "#/components/responses/ServerError"
   /Users/me/following/{followId}:
     put:
       summary: follow a user 
@@ -438,16 +484,20 @@ paths:
           schema:
             $ref: "#/components/schemas/identifier" 
       requestBody:
+        description: the person you want to follow
+        required: true
         content:
           application/json:
-            schema: {$ref: "#/components/schemas/User/properties/id"}
+            schema: {$ref: "#/components/schemas/User"}
       responses:
         "201":
-          description: user followed
-        "204":
-          description: user blocked you
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
     delete:
       summary: unfollow a user 
       description: |
@@ -463,10 +513,14 @@ paths:
           schema:
             $ref: "#/components/schemas/identifier" 
       responses:
-        "204":
-          description: user unfollowed
+        "200":
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Users/me/muted/{bannedId}:
     put:
       summary: ban a user 
@@ -484,9 +538,13 @@ paths:
             $ref: "#/components/schemas/identifier" 
       responses:
         "201":
-          description: user banned
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
     delete:
       summary: unban a banned user 
       description: |
@@ -503,9 +561,13 @@ paths:
             $ref: "#/components/schemas/identifier"
       responses:
         "200":
-          description: user unbanned
+          $ref: "#/components/responses/OkDone:)"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: user not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   
         
       
