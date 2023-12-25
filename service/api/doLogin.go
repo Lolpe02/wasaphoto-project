@@ -40,10 +40,10 @@ Possible outcomes:
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
+	"net/http"
+	"strings"
 )
 
 /*
@@ -56,11 +56,12 @@ If the username exists, the user identifier is returned.
 */
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// setting response header
+
 	w.Header().Set("Content-Type", "application/json")
 
 	// extracting username from the request
-	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var userName string
+	err := json.NewDecoder(r.Body).Decode(&userName)
 
 	// 1.
 	// checking if decoding operation ended successfully
@@ -71,43 +72,21 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n\n")
 		return
 	}
-
+	// validating username (removing white spaces and new lines)
+	userName = strings.Replace(userName, "\n", "", -1)
+	userName = strings.TrimSpace(userName)
 	// 2.
 	// checking if the username is valid
-	if !isValid(user.Name) {
+	if !isValid(userName) {
 		// the username is not valid, rejecting request
 		w.WriteHeader(http.StatusBadRequest) //400
 		fmt.Fprint(w, "\ndoLogin: the username is not valid\n\n")
 		return
 	}
-
-	// moving on to the database section
-	// first of all we search the user to see if it has alredy been created
-	selectedUser, present := rt.db.SearchByUsername(user.ToDatabase())
-
 	// 3.
-	// if the user altready exists, return the ID
-	if present {
-		fmt.Fprintln(w)
-		err = json.NewEncoder(w).Encode(selectedUser)
-
-		// 4.
-		// if encoding operation is unsuccessful though the user is present
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) //500
-			ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user is present")
-			fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n\n")
-			return
-		}
-
-		w.WriteHeader(http.StatusOK) //200
-		fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
-		return
-	}
-
-	// 5.
-	// if the user doesn't exist yet, create it and return the ID
-	createdUser, err := rt.db.CreateUser(user.ToDatabase())
+	// return the ID
+	var userId int64
+	userId, err = rt.db.CreateUser(userName)
 
 	// 6.
 	// if user creation or ID retrieval is unsuccessful
@@ -117,20 +96,23 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		fmt.Fprint(w, "\ndoLogin: user creation or ID retrieval is unsuccessful\n\n")
 		return
 	}
-
+	// send it back
 	fmt.Fprintln(w)
-	err = json.NewEncoder(w).Encode(createdUser)
+	err = json.NewEncoder(w).Encode(userId)
 
-	// 7.
-	// if encoding operation is unsuccessful though the user has been created
+	// 4.
+	// if encoding operation is unsuccessful though the user is present
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) //500
-		ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user has been created")
-		fmt.Fprint(w, "doLogin: unable to encode JSON response though the user has been created\n\n")
+		ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user is present")
+		fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n\n")
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated) //201
-	fmt.Fprint(w, "\nUser sign-up action successful.\nThe user ID has been created and is returned in the content.\n\n")
+	w.WriteHeader(http.StatusOK) //200
+	fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
 
+}
+func isValid(str string) bool {
+	return 3 <= len(str) && len(str) <= 20
 }

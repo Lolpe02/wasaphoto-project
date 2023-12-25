@@ -167,7 +167,8 @@ paths:
     post:
       tags: ["login"]
       summary: Logs in the user
-      description: |-
+      security: []
+      description: |
         If the user does not exist, it will be created,
         and an identifier is returned.
         If the user exists, the user identifier is returned.
@@ -199,7 +200,6 @@ paths:
                   $ref: "#/components/schemas/identifier"
         "500":
           description: something went wrong in the server
- 
   /Images/{postId}/likes/:
     parameters:
       - name: postId
@@ -411,8 +411,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
-          $ref: "#/components/responses/ServerError"     
-          
+          $ref: "#/components/responses/ServerError"       
   /Users/me/myStream/:
     get:
       summary: watch your friends' photos

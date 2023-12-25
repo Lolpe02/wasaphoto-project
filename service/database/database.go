@@ -34,7 +34,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/gofrs/uuid"
+	//"github.com/mattn/go-sqlite3"
 	//"strings"
 )
 
@@ -42,7 +44,7 @@ import (
 type AppDatabase interface {
 	CreateUser(username string) (newUserID int64, err error)
 	SearchByUsername(targetUser string) (selUserId string, err error)
-	SearchById(targetUserId int64) (selUserName string, err error)
+	SearchById(targetUserId int64) (selUserName string, subscription string, err error)
 	GetProfile(targetUserId int64) (postIds []int64, err error)
 	GetFeed(yourId int64) (postIds []int64, err error)
 	PutLike(targetPost int64, creator int64) (err error)
@@ -144,7 +146,8 @@ func (db *appdbimpl) CreateUser(username string) (yourUserID int64, err error) {
 	if error != nil {
 		fmt.Println(newUId.String())
 	}
-	err = db.c.QueryRow("INSERT IGNORE INTO users (userName) VALUES (?) RETURNING userId", username).Scan(&yourUserID)
+
+	err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT(userName) DO SELECT userId FROM users WHERE userName = ?", username, username).Scan(&yourUserID) // also with
 	if err != nil {
 		fmt.Println("Error inserting into database:", err)
 		return -1, err
@@ -216,7 +219,7 @@ func (db *appdbimpl) GetProfile(targetUserId int64) (postIds []int64, err error)
 	}
 
 	// Print or use the retrieved Id list
-	return 
+	return
 }
 func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	var rows *sql.Rows
@@ -251,7 +254,7 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	}
 
 	// Print or use the retrieved Id list
-	return 
+	return
 }
 func (db *appdbimpl) PutLike(targetPost int64, creator int64) (err error) {
 	_, err = db.c.Exec("INSERT INTO likes (userId, postId) VALUES (?, ?)", creator, targetPost)
