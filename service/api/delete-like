@@ -8,7 +8,7 @@ import (
 )
 
 // receive creator from bearer token, photo id from path, write
-func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// read security bearer token from header
 	creator, err := extractToken(r)
 	if err != nil {
@@ -23,11 +23,11 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	// Call the database function to create the like
-	err = rt.db.PutLike(pid, creator)
+	// Call the database function to delete the like
+	err = rt.db.Unlike(pid, creator)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Failed to create like", http.StatusInternalServerError)
+		http.Error(w, "Failed to delete like", http.StatusInternalServerError)
 		return
 	}
 

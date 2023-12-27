@@ -2,20 +2,21 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"strconv"
 )
 
 func (rt *_router) getLikesPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("content-type", "application/json")
 	var userIds []int64
 	// take parameters from the path and turn string to int64
-	postId, err := strconv.ParseInt(ps.ByName("postId"), 10, 64)
-
+	postId, err := readPath(ps, "postId")
 	if err != nil {
+		fmt.Println(err)
 		// could not parse the post id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) //400
+		return
 	}
 	userIds, err = rt.db.GetLikes(postId)
 	if err != nil {
