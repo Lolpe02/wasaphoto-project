@@ -25,13 +25,16 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
-	targetPost, creator, _, err := rt.db.GetPost(postId)
+	// put retrieved post in post object
+
+	targetPost, creator, date, err := rt.db.GetPost(postId)
 	if err != nil {
 		// could not get creator, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
 		return
 	}
-	_, present, err1 := rt.db.GetFolloweds(creator, yourId)
+	retrieved := post{targetPost, postId, creator, date}
+	_, present, err1 := rt.db.GetFolloweds(retrieved.Creator, yourId)
 	if err1 != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
@@ -45,6 +48,6 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) //200
-	json.NewEncoder(w).Encode(targetPost)
-	return
+	json.NewEncoder(w).Encode(retrieved.Image)
+
 }

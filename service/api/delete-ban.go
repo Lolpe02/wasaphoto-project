@@ -32,5 +32,4 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusCreated) //200
-	return
 }

@@ -32,5 +32,4 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) //200
-	return
 }

@@ -9,7 +9,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	w.Header().Set("content-type", "application/json")
 
 	// take id parameters from the path (person to follow)
-	IdtoFollow, err := readPath(ps, "followId")
+	IdtoBan, err := readPath(ps, "followId")
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) //400
@@ -23,7 +23,8 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
-	err = rt.db.BanUser(yourId, IdtoFollow)
+	ban := ban{IdtoBan, yourId}
+	err = rt.db.BanUser(ban.BannerID, ban.BannedID)
 	if err != nil {
 		// could not follow, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
@@ -32,5 +33,5 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusCreated) //200
-	return
+
 }

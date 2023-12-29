@@ -38,6 +38,4 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// return the id of the post?? idk
 	w.WriteHeader(http.StatusCreated) //201
-
-	return
 }

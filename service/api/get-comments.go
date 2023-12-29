@@ -32,9 +32,19 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 		// get the list of comment ids
 		commentIds, err = rt.db.GetCommentList(postId, commenter)
+		if err != nil {
+			// could not get likes, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) //500
+			return
+		}
 	} else {
 		// get the list of comment ids
 		commentIds, err = rt.db.GetCommentList(postId, -1)
+		if err != nil {
+			// could not get likes, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) //500
+			return
+		}
 	}
 	if err != nil {
 		// could not get likes, throw internal server error
@@ -60,5 +70,4 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 	// return the list of user ids
 	w.WriteHeader(http.StatusOK) //200
 	json.NewEncoder(w).Encode(comments)
-	return
 }

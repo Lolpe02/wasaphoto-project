@@ -23,7 +23,8 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
-	err = rt.db.FollowUser(yourId, IdtoFollow)
+	follow := follow{yourId, IdtoFollow}
+	err = rt.db.FollowUser(follow.FollowingID, follow.FollowedID)
 	if err != nil {
 		// could not follow, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
@@ -32,5 +33,4 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusCreated) //200
-	return
 }

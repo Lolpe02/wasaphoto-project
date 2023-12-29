@@ -8,7 +8,7 @@ type user struct {
 }
 type post struct {
 	Image   []byte `json:"photo"`
-	ID      int    `json:"id"`
+	ID      int64  `json:"id"`
 	Creator int64  `json:"creator"`
 	Date    string `json:"date"`
 }

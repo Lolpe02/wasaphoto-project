@@ -110,5 +110,4 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	w.WriteHeader(http.StatusOK) //200
 	fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
-	return
 }

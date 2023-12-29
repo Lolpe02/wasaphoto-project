@@ -27,5 +27,4 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	// return the list of user ids
 	w.WriteHeader(http.StatusOK) //200
 	json.NewEncoder(w).Encode(userIds)
-	return
 }

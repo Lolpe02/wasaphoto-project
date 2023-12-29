@@ -26,5 +26,4 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	// return the list of user ids
 	w.WriteHeader(http.StatusOK) //200
 	json.NewEncoder(w).Encode(postIds)
-	return
 }

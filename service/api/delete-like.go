@@ -33,5 +33,4 @@ func (rt *_router) unlike(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// Return a success response
 	w.WriteHeader(http.StatusOK)
-	return
 }

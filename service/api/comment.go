@@ -12,6 +12,12 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 	// take token from the header
 	var postId int64
 	creator, err := extractToken(r)
+	if err != nil {
+		// not authenticated, throw unauthorized
+		w.WriteHeader(http.StatusUnauthorized) //401
+		return
+	}
+
 	// take parameters from the path and turn string to int64
 	postId, err = readPath(ps, "postId")
 	if err != nil {
@@ -29,7 +35,7 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	// put the comment in the database
-	postId, err = rt.db.PutComment(creator, content, postId)
+	_, err = rt.db.PutComment(creator, content, postId)
 	if err != nil {
 		// could not create comment, internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
@@ -37,6 +43,4 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	// return the id of the comment?? idk
 	w.WriteHeader(http.StatusCreated) //201
-
-	return
 }

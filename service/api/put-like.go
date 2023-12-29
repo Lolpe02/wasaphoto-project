@@ -22,9 +22,9 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	like := like{pid, creator}
 	// Call the database function to create the like
-	err = rt.db.PutLike(pid, creator)
+	err = rt.db.PutLike(like.PostID, like.UserID)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Failed to create like", http.StatusInternalServerError)
@@ -33,5 +33,4 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	// Return a success response
 	w.WriteHeader(http.StatusOK)
-	return
 }

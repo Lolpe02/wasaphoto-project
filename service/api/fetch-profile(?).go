@@ -62,5 +62,5 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) //200
 	json.NewEncoder(w).Encode(user)
-	return
+
 }
