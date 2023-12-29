@@ -8,7 +8,7 @@ import (
 )
 
 // receive creator from bearer token, photo id from path, write
-func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (rt *_router) unlike(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// read security bearer token from header
 	creator, err := extractToken(r)
 	if err != nil {

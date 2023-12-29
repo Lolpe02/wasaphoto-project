@@ -43,7 +43,8 @@ import (
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	CreateUser(username string) (newUserID int64, err error)
-	SearchByUsername(targetUser string) (selUserId string, err error)
+	ChangeUsername(yourUserID int64, newUsername string) (err error)
+	SearchByUsername(targetUser string) (selUserId int64, err error)
 	SearchById(targetUserId int64) (selUserName string, subscription string, err error)
 	GetProfile(targetUserId int64) (postIds []int64, err error)
 	GetFeed(yourId int64) (postIds []int64, err error)
@@ -154,17 +155,35 @@ func (db *appdbimpl) CreateUser(username string) (yourUserID int64, err error) {
 	}
 	return
 }
-func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId string, err error) {
+func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err error) {
+	res, err := db.c.Exec("UPDATE users SET userName = ? WHERE username != ? AND userId = ?", newUsername, yourUserID)
+	if err != nil {
+		// could not update the user, throw internal server error
+		return err
+	}
+	// check if the user was updated
+	rows, err := res.RowsAffected()
+	if err != nil {
+		// could not update the user, throw internal server error
+		return err
+	}
+	if rows == 0 {
+		// the user was not updated, throw bad request
+		return errors.New("user not found")
+	}
+	return nil
+}
+func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err error) {
 	err = db.c.QueryRow("SELECT user_id FROM users WHERE username = ?;", targetUser).Scan(&selUserId)
 
 	// Handling sql.ErrNoRows
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Return nil values and specify the error
-			return "", errors.New("user not found")
+			return -1, errors.New("user not found")
 		}
 		// Return other errors as is
-		return "", err
+		return -1, err
 	}
 
 	// Return retrieved values and nil error
@@ -527,6 +546,11 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 	// Print or use the retrieved Id list
 	return
 }
+
+// GetFolloweds retrieves the list of users followed by the target user.
+// It takes the target user ID and a test ID as parameters.
+// It returns the list of followed user IDs, a boolean indicating if the test ID is present in the list,
+// and an error if any occurred during the database query or iteration.
 func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyTargetIds []int64, present bool, err error) {
 	var rows *sql.Rows
 	present = false
@@ -565,6 +589,11 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 	// Print or use the retrieved Id list
 	return
 }
+
+// GetFollowing retrieves the list of target user IDs that the specified target user is following,
+// along with a boolean indicating whether the test ID is present in the list.
+// It takes the target user ID and the test ID as parameters.
+// It returns the following target user IDs, a boolean indicating presence, and any error encountered.
 func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error) {
 	var rows *sql.Rows
 	present = false

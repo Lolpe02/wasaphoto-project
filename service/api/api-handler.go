@@ -7,24 +7,24 @@ import (
 // Handler returns an instance of httprouter.Router that handle APIs registered here
 func (rt *_router) Handler() http.Handler {
 	// Register routes
-	rt.router.GET("/", rt.getName)         //??
-	rt.router.POST("/session", rt.doLogin) //.wrap(rt.getContextReply))
-	rt.router.GET("/Images/:postId/likes/", rt.getLikesPhoto)
-	rt.router.POST("/Images/:postId/likes/", rt.likePhoto)
-	rt.router.DELETE("/Images/:postId/likes/:yourId", rt.unlikePhoto)
-	rt.router.GET("/Images/:postId/comments/", rt.getCommentsPhoto)
-	rt.router.POST("/Images/:postId/comments/", rt.commentPhoto)
-	rt.router.DELETE("/Images/:postId/comments/:yourId", rt.uncommentPhoto)
+	//rt.router.GET("/", rt.getName) //??
+	rt.router.POST("/session", rt.wrap(rt.doLogin))
+	rt.router.GET("/Images/:postId/likes/", rt.getLikes)
+	rt.router.POST("/Images/:postId/likes/", rt.like)
+	rt.router.DELETE("/Images/:postId/likes/:yourId", rt.unlike)
+	rt.router.GET("/Images/:postId/comments/", rt.getComments)
+	rt.router.POST("/Images/:postId/comments/", rt.comment)
+	rt.router.DELETE("/Images/:postId/comments/:yourId", rt.uncomment)
 	rt.router.PATCH("/Users/:userId", rt.setMyUserName)
-	rt.router.GET("/Users/", rt.getUserProfile)
+	rt.router.GET("/Users/", rt.getProfile)
 	rt.router.GET("/Users/me/myStream", rt.getMyStream)
-	rt.router.POST("/Images", rt.uploadPhoto)
+	rt.router.POST("/Images", rt.upload)
 	rt.router.DELETE("/Images/:postId", rt.deletePhoto)
 	rt.router.GET("/Images/:postId", rt.getPhoto)
-	rt.router.DELETE("/Users/me/following/:followId", rt.followUser)
-	rt.router.PUT("/Users/me/following/:followId", rt.unfollowUser)
-	rt.router.DELETE("/Users/me/muted/:bannedId", rt.banUser)
-	rt.router.PUT("/Users/me/muted/:bannedId", rt.unbanUser)
+	rt.router.PUT("/Users/me/following/:followId", rt.follow)
+	rt.router.DELETE("/Users/me/following/:followId", rt.unfollow)
+	rt.router.PUT("/Users/me/muted/:bannedId", rt.ban)
+	rt.router.DELETE("/Users/me/muted/:bannedId", rt.unban)
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)

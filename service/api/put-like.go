@@ -8,7 +8,7 @@ import (
 )
 
 // receive creator from bearer token, photo id from path, write
-func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// read security bearer token from header
 	creator, err := extractToken(r)
 	if err != nil {

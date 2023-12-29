@@ -8,7 +8,7 @@ import (
 func GetNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Query the database for a user
-	var user User
+	var user user
 
 	// Convert the user to JSON
 	userJSON, err := json.Marshal(user)

@@ -2,7 +2,6 @@ package api
 
 // in order not to write hard stuff
 import (
-	"encoding/json"
 	"errors"
 
 	//"fmt"
@@ -15,10 +14,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func bodyReader(r *http.Request, args int) (err error) {
-	err = json.NewDecoder(r.Body).Decode(&args)
-	return
-}
 func readPath(ps httprouter.Params, field string) (Id int64, err error) {
 	Id, err = strconv.ParseInt(ps.ByName(field), 10, 64)
 	if err != nil {
@@ -43,4 +38,7 @@ func extractToken(r *http.Request) (bearer int64, err error) {
 		return intId, nil
 	}
 	return -1, errors.New("Something wrong with Authorization header")
+}
+func isValid(str string) bool {
+	return 3 <= len(str) && len(str) <= 20
 }

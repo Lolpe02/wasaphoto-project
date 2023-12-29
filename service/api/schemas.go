@@ -1,25 +1,26 @@
 package api
 
 type user struct {
-	ID   int64  `json:"userId"`
-	Name string `json:"userNname"`
-	Date string `json:"date"`
+	ID      int64   `json:"userid"`
+	Name    string  `json:"username"`
+	Date    string  `json:"date"`
+	Profile []int64 `json:"posted"`
 }
 type post struct {
-	ID      int    `json:"postId"`
-	Creator int64  `json:"creatorId"`
-	Image   []byte `json:"image"`
+	Image   []byte `json:"photo"`
+	ID      int    `json:"id"`
+	Creator int64  `json:"creator"`
 	Date    string `json:"date"`
 }
 type like struct {
-	PostID int64 `json:"postId"`
-	UserID int64 `json:"userId"`
+	UserID int64 `json:"creator"`
+	PostID int64 `json:"post"`
 }
 type comment struct {
-	PostID int64  `json:"postId"`
-	UserID int64  `json:"userId"`
-	Text   string `json:"text"`
+	PostID int64  `json:"post"`
+	UserID int64  `json:"creator"`
 	Date   string `json:"date"`
+	Text   string `json:"content"`
 }
 type follow struct {
 	FollowingID int64 `json:"followingId"`

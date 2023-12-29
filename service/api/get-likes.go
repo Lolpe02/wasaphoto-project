@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (rt *_router) getLikesPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("content-type", "application/json")
 	var userIds []int64
 	// take parameters from the path and turn string to int64

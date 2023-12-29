@@ -14,10 +14,10 @@ components:
       title: Id
       description: identifier of an object
       type: string
-      example: "1a76Vr4"
-      minLength: 4
-      maxLength: 10
-      pattern: "^[a-zA-Z0-9_-]{4,10}$"
+      example: "1859539085498"
+      minLength: 1
+      maxLength: 19
+      pattern: "^[1-9][0-9]{1,18}$"
       readOnly: true
     Post:
       title: Post
@@ -36,52 +36,58 @@ components:
           maxLength: 9999999999999999999
         id:
           $ref: "#/components/schemas/identifier"
-        time:
+        creator:
+          $ref: "#/components/schemas/identifier"
+        date:
           description: when the post was uploaded
           type: string
           format: date-time
-          minLength: 1
+          minLength: 6
           maxLength: 20
-        \#like:
-          description: number of likes
-          type: integer
-          default: 0
-          minimum: 0
-          maximum: 9999999999999999999
-          readOnly: true
-        likes:
-          description: list of likes of the post
-          type: array
-          items: 
-            $ref: "#/components/schemas/Like"
-          minItems: 0
-          maxItems: 9999999999999999999
-        comments:
-          description: list of comments of the post
-          type: array
-          items: 
-            $ref: "#/components/schemas/Comment"
-          minItems: 0
-          maxItems: 9999999
+        #\#like:
+          #description: number of likes
+          #type: integer
+          #default: 0
+          #minimum: 0
+          #maximum: 9999999999999999999
+          #readOnly: true
+        #likes:
+          #description: list of likes of the post
+          #type: array
+          #items: 
+          #  $ref: "#/components/schemas/Like"
+          #minItems: 0
+          #maxItems: 9999999999999999999
+        #comments:
+          #description: list of comments of the post
+          #type: array
+          #items: 
+          #  $ref: "#/components/schemas/Comment"
+          #minItems: 0
+          #maxItems: 9999999
     Like:
       title: Post upvote
       description: post upvote
       type: object
       properties:
-        User:
+        creator:
+          $ref: "#/components/schemas/identifier"
+        post:
           $ref: "#/components/schemas/identifier"
     Comment:
       title: Post comment
       description: post comment
       type: object
       properties:
-        User:
+        postId:
+          $ref: "#/components/schemas/identifier"
+        creator:
           $ref: "#/components/schemas/identifier"
         date:
           description: when this comment was sent
           type: string
           format: date-time
-          minLength: 1
+          minLength: 6
           maxLength: 20
         content:
           description: user's input string
@@ -95,16 +101,23 @@ components:
       description: this object is a single user
       type: object
       properties:
-        id:
+        userid:
           $ref: "#/components/schemas/identifier"
         username:
           description: how the user will be recognized
           type: string
-          minLength: 1
+          minLength: 3
           maxLength: 25
-          pattern: '(.*?){1,25}$' #(.*?)
+          pattern: '(.*?){3,25}$' 
           example: "SkibidiSigma420"
           readOnly: false
+        date:
+          description: when the user was created
+          type: string
+          format: date-time
+          minLength: 6
+          maxLength: 20
+          readOnly: true
         posted:
           description: list of user's post
           type: array
@@ -126,7 +139,7 @@ components:
           schema:
             description: returned error string
             type: string
-            minLength: 0
+            minLength: 1
             maxLength: 30
             pattern: '(.*?){1,30}$' #(.*?)
     OkDone:
@@ -136,7 +149,7 @@ components:
           schema:
             description: returned error string
             type: string
-            minLength: 0
+            minLength: 1
             maxLength: 30
             pattern: '(.*?){1,30}$' #(.*?)
     UnauthorizedError:
@@ -146,7 +159,7 @@ components:
           schema:
             description: returned error string
             type: string
-            minLength: 0
+            minLength: 1
             maxLength: 30
             pattern: '(.*?){1,30}$' #(.*?)
     ServerError:
@@ -156,7 +169,7 @@ components:
           schema:
             description: returned error string
             type: string
-            minLength: 0
+            minLength: 1
             maxLength: 30
             pattern: '(.*?){1,30}$' #(.*?)
 security:
@@ -303,9 +316,9 @@ paths:
                 description: array of all comments
                 type: array
                 items:
-                  {$ref: "#/components/schemas/Comment"}
+                  $ref: "#/components/schemas/Comment"
                 minItems: 0
-                maxItems: 10000
+                maxItems: 500000
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -323,7 +336,7 @@ paths:
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/Comment"
+              $ref: "#/components/schemas/Comment/properties/content"
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
@@ -380,7 +393,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/User/properties/username"
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
@@ -448,21 +461,19 @@ paths:
       tags: ["post", "upload", "create"]
       requestBody:
         required: true
-        description: upload your photo, with time
+        description: upload your photo file
         content:
-          multipart/form-data:
-            schema: 
-              $ref: "#/components/schemas/Post"
-            #encoding:
-              #photo:
-                #contentType: image/png, image/jpeg
+          image:
+            schema:
+              $ref: "#/components/schemas/Post/properties/photo"
+            encoding:
+              photo:
+                contentType: image/png, image/jpeg
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
   /Images/{postId}:
@@ -503,6 +514,40 @@ paths:
             image:
               schema:
                 $ref: "#/components/schemas/Post/properties/photo"
+              encoding:
+                photo:
+                  contentType: image/png, image/jpeg
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /Images/{postId}/metadata:
+    parameters:
+        - in: path
+          name: postId
+          required: true
+          description: Id of photo metadata you want to get
+          schema:
+            $ref: "#/components/schemas/identifier"
+    get:
+      summary: get a post metadata (creator, date)
+      description: aquire a post given its id
+      operationId: getPhotoMetadata
+      tags: ["photo", "post"]
+      responses:
+        "200":
+          description: requested post info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  creator:
+                    $ref: "#/components/schemas/Post/properties/creator"
+                  date:
+                    $ref: "#/components/schemas/Post/properties/date"              
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -530,7 +575,7 @@ paths:
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/User/properties/userid"
       responses:
         "201":
           $ref: "#/components/responses/OkDone"

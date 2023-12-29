@@ -73,8 +73,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	// validating username (removing white spaces and new lines)
-	userName = strings.Replace(userName, "\n", "", -1)
-	userName = strings.TrimSpace(userName)
+	userName = strings.TrimSpace(strings.Replace(userName, "\n", "", -1))
 	// 2.
 	// checking if the username is valid
 	if !isValid(userName) {
@@ -111,8 +110,5 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	w.WriteHeader(http.StatusOK) //200
 	fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
-
-}
-func isValid(str string) bool {
-	return 3 <= len(str) && len(str) <= 20
+	return
 }
