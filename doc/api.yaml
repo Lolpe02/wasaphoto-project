@@ -3,6 +3,9 @@ info:
   title: "WasaPhoto"
   version: 1.0.0
   description: api for "WasaPhoto" project
+servers:
+  - url: http://localhost:3000
+    description: Local server
 tags:
   - name: user 
     description: Operations related to users
@@ -13,11 +16,8 @@ components:
     identifier:
       title: Id
       description: identifier of an object
-      type: string
-      example: "1859539085498"
-      minLength: 1
-      maxLength: 19
-      pattern: "^[1-9][0-9]{1,18}$"
+      type: integer
+      format: int64
       readOnly: true
     Post:
       title: Post
@@ -101,9 +101,9 @@ components:
       description: this object is a single user
       type: object
       properties:
-        userid:
+        userId:
           $ref: "#/components/schemas/identifier"
-        username:
+        userName:
           description: how the user will be recognized
           type: string
           minLength: 3
@@ -125,6 +125,23 @@ components:
             $ref: "#/components/schemas/Post/properties/id"
           minItems: 0
           maxItems: 10000
+          readOnly: true
+        following:
+          description: list of user's followed users
+          type: array
+          items: 
+            $ref: "#/components/schemas/User/properties/userId"
+          minItems: 0
+          maxItems: 10000
+          readOnly: true
+        followed:
+          description: list of user's followers
+          type: array
+          items: 
+            $ref: "#/components/schemas/User/properties/userId"
+          minItems: 0
+          maxItems: 10000
+          readOnly: true
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
@@ -191,11 +208,7 @@ paths:
         content:
           application/json:
             schema:
-              description: the name string
-              type: object
-              properties:
-                name:
-                  $ref: "#/components/schemas/User/properties/username"
+              $ref: "#/components/schemas/User/properties/userName"
 
         required: true
       responses:
@@ -373,19 +386,19 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/{username}:
+  /Users/{userName}:
     parameters:
-      - name: username
+      - name: userName
         in: path
         required: true
-        description: The id username of the user to update or find 
+        description: The userName of the user to update or find 
         schema:
-          $ref: "#/components/schemas/User/properties/username"
+          $ref: "#/components/schemas/User/properties/userName"
     patch:
-      summary: change your username
-      description: change your username, it must be valid
+      summary: change your userName
+      description: change your userName, it must be valid
       operationId: setMyUserName
-      tags: ["username"]
+      tags: ["userName"]
       
       requestBody:
         description: String payload for updating the resource
@@ -393,7 +406,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User/properties/username"
+              $ref: "#/components/schemas/User/properties/userName"
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
@@ -407,7 +420,7 @@ paths:
       summary: get a user profile
       description: | 
         receive a user profile, made of:
-        - username
+        - userName
         - posts
         - followed and following lists
       operationId: getUserProfile
@@ -554,15 +567,9 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/me/following/{followId}:
-    parameters:
-      - name: followId
-        in: path
-        required: true
-        description: uid to follow/unfollow
-        schema:
-          $ref: "#/components/schemas/identifier" 
-    put:
+  /Users/me/following/:
+    
+    post:
       summary: follow a user 
       description: |
         insert a user in your list of people you follow,
@@ -575,7 +582,7 @@ paths:
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/User/properties/userid"
+              $ref: "#/components/schemas/User/properties/userId"
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
@@ -585,6 +592,14 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
+  /Users/me/following/{followId}:
+    parameters:
+      - name: followId
+        in: path
+        required: true
+        description: uid to unfollow
+        schema:
+          $ref: "#/components/schemas/identifier"
     delete:
       summary: unfollow a user 
       description: |
@@ -601,15 +616,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/me/muted/{bannedId}:
-    parameters:
-      - name: bannedId
-        in: path
-        description: Id of the user you want to unban
-        required: true
-        schema:
-          $ref: "#/components/schemas/identifier"
-    put:
+  /Users/me/muted/:
+    post:
       summary: ban a user 
       description: |
         insert a user in your list of banned people,
@@ -625,6 +633,14 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
+  /Users/me/muted/{bannedId}:
+    parameters:
+      - name: bannedId
+        in: path
+        description: Id of the user you want to unban
+        required: true
+        schema:
+          $ref: "#/components/schemas/identifier"
     delete:
       summary: unban a banned user 
       description: |

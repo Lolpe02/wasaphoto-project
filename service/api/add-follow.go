@@ -1,15 +1,18 @@
 package api
 
 import (
-	"github.com/julienschmidt/httprouter"
+	"encoding/json"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("content-type", "application/json")
 
 	// take id parameters from the path (person to follow)
-	IdtoFollow, err := readPath(ps, "followId")
+	var IdtoFollow int64
+	err := json.NewDecoder(r.Body).Decode(&IdtoFollow)
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) //400

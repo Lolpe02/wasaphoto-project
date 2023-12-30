@@ -24,7 +24,8 @@ func readPath(ps httprouter.Params, field string) (Id int64, err error) {
 
 func extractToken(r *http.Request) (bearer int64, err error) {
 	bearerToken := r.Header.Get("Authorization")
-	if bearerToken == "" {
+	bearerToken = strings.TrimPrefix(bearerToken, ": ")
+	if bearerToken == "" || bearerToken == " " {
 		// the request body was not a parseable JSON or is missing, rejecting the request and return error
 		return -1, errors.New("no authorization header")
 	}

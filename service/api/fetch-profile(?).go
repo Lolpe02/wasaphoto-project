@@ -11,7 +11,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 	w.Header().Set("content-type", "application/json")
 	var postIds []int64
 	// take username parameters from the path
-	username := ps.ByName("username")
+	username := ps.ByName("userName")
 
 	if username == "" {
 		// could not parse the id, throw bad request
@@ -32,7 +32,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
-	_, present, err1 := rt.db.GetFolloweds(targetId, yourId)
+	followed, present, err1 := rt.db.GetFolloweds(targetId, yourId)
 	if err1 != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
@@ -57,7 +57,13 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusInternalServerError) //500
 		return
 	}
-	user := user{targetId, selname, sub, postIds}
+	follows, present, err := rt.db.GetFollowing(targetId, -1)
+	if err != nil {
+		// could not get follows, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) //500
+		return
+	}
+	user := user{targetId, selname, sub, postIds, follows, followed}
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) //200

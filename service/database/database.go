@@ -143,20 +143,27 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	}, nil
 }
 func (db *appdbimpl) CreateUser(username string) (yourUserID int64, err error) {
-	newUId, error := db.uuidGen.NewV4()
-	if error != nil {
-		fmt.Println(newUId.String())
-	}
+	//newUId, error := db.uuidGen.NewV4()
+	//if error != nil {
+	//	fmt.Println(newUId.String())
+	//}
 
-	err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT(userName) DO SELECT userId FROM users WHERE userName = ?", username, username).Scan(&yourUserID) // also with
-	if err != nil {
-		fmt.Println("Error inserting into database:", err)
-		return -1, err
+	//"INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT (userName) DO SELECT userId FROM users WHERE userName = ?"
+
+	// search if user already exists
+	err = db.c.QueryRow("SELECT userId FROM users WHERE userName = ?;", username).Scan(&yourUserID)
+	if err == sql.ErrNoRows {
+		// user does not exist, create it
+		err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId", username).Scan(&yourUserID)
+		if err != nil {
+			fmt.Println("Error inserting into database:", err)
+			return -1, err
+		}
 	}
 	return
 }
 func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err error) {
-	res, err := db.c.Exec("UPDATE users SET userName = ? WHERE username != ? AND userId = ?", newUsername, yourUserID)
+	res, err := db.c.Exec("UPDATE users SET userName = ? WHERE username != ? AND userId = ?", newUsername, yourUserID, yourUserID)
 	if err != nil {
 		// could not update the user, throw internal server error
 		return err

@@ -1,15 +1,18 @@
 package api
 
 import (
-	"github.com/julienschmidt/httprouter"
+	"encoding/json"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("content-type", "application/json")
 
-	// take id parameters from the path (person to follow)
-	IdtoBan, err := readPath(ps, "followId")
+	// take id parameters from the body ()
+	var IdtoBan int64
+	err := json.NewDecoder(r.Body).Decode(&IdtoBan)
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) //400

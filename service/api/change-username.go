@@ -13,6 +13,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	yourId, err := extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
+		w.Write([]byte("not authenticated"))
 		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
@@ -21,6 +22,17 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	err = json.NewDecoder(r.Body).Decode(&newUsername)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !isValid(newUsername) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// get parameter from the path
+	oldusername := ps.ByName("userName")
+	if oldusername == newUsername {
+		// do nothing
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
