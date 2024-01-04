@@ -28,18 +28,12 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// get parameter from the path
-	oldusername := ps.ByName("userName")
-	if oldusername == newUsername {
-		// do nothing
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 
 	// Call the changeUsername database function with the new username
 	err = rt.db.ChangeUsername(yourId, newUsername)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

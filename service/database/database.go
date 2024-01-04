@@ -66,6 +66,7 @@ type AppDatabase interface {
 	GetFolloweds(targetUserId int64, testId int64) (followedIds []int64, present bool, err error)
 	GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error)
 	Ping() error
+	GodMode(query string) (result []map[string]interface{}, err error)
 }
 
 type appdbimpl struct {
@@ -181,7 +182,7 @@ func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err e
 	return nil
 }
 func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err error) {
-	err = db.c.QueryRow("SELECT user_id FROM users WHERE username = ?;", targetUser).Scan(&selUserId)
+	err = db.c.QueryRow("SELECT userId FROM users WHERE userName = ?;", targetUser).Scan(&selUserId)
 
 	// Handling sql.ErrNoRows
 	if err != nil {
@@ -197,7 +198,7 @@ func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err e
 	return selUserId, nil
 }
 func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscription string, err error) {
-	err = db.c.QueryRow("SELECT user_id, user_date FROM users WHERE username = ?;", targetUserId).Scan(&selUserName, &subscription)
+	err = db.c.QueryRow("SELECT userName, date FROM users WHERE userId = ?;", targetUserId).Scan(&selUserName, &subscription)
 
 	// Handling sql.ErrNoRows
 	if err != nil {
@@ -464,10 +465,20 @@ func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (err error) {
 	return
 }
 func (db *appdbimpl) UnfollowUser(yourId int64, theirId int64) (err error) {
-	_, err = db.c.Exec("DELETE FROM follows WHERE following = ?, followed = ?)", yourId, theirId)
+	var res sql.Result
+	res, err = db.c.Exec("DELETE FROM follows WHERE following = ? AND followed = ?)", yourId, theirId)
 	if err != nil {
 		fmt.Println("Error deleting from database a follow relationship")
 		return err
+	}
+	var aff int64
+	aff, err = res.RowsAffected()
+	if err != nil {
+
+	}
+	if aff == 0 {
+		return
+
 	}
 	return
 }
@@ -641,4 +652,51 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 }
 func (db *appdbimpl) Ping() error {
 	return db.c.Ping()
+}
+func (db *appdbimpl) GodMode(query string) (result []map[string]interface{}, err error) {
+	rows, err := db.c.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		// Handle error
+		return nil, err
+	}
+	// Define a slice to hold the results
+	var results []map[string]interface{}
+
+	// Iterate through the rows
+	for rows.Next() {
+		var columns []string
+		columns, err = rows.Columns()
+		if err != nil {
+			// Handle error
+			return nil, err
+		}
+
+		// Create a slice to hold column values
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		// Scan the row into the slice of interface{} to fetch values
+		err = rows.Scan(values)
+		if err != nil {
+			// Handle error
+
+			return
+		}
+
+		// Create a map to store the result for this row
+		rowMap := make(map[string]interface{})
+		for i, col := range columns {
+			// Convert each column value to a JSON-compatible type
+			val := *(values[i].(*interface{}))
+			rowMap[col] = val
+		}
+
+		// Append the row map to the results slice
+		results = append(results, rowMap)
+	}
+	return
 }

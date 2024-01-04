@@ -386,14 +386,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/{userName}:
-    parameters:
-      - name: userName
-        in: path
-        required: true
-        description: The userName of the user to update or find 
-        schema:
-          $ref: "#/components/schemas/User/properties/userName"
+  /Users/:
     patch:
       summary: change your userName
       description: change your userName, it must be valid
@@ -424,6 +417,13 @@ paths:
         - posts
         - followed and following lists
       operationId: getUserProfile
+      parameters:
+        - name: userName
+          in: query
+          description: Name of the user you want to get
+          required: true
+          schema:
+            $ref: "#/components/schemas/User/properties/userName"
       tags: ["profile"]
       responses:
         "200":

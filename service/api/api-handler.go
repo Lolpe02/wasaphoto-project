@@ -17,7 +17,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/Images/:postId/comments/", rt.comment)
 	rt.router.DELETE("/Images/:postId/comments/:yourId", rt.uncomment)
 	rt.router.PATCH("/Users/", rt.setMyUserName)
-	rt.router.GET("/Users/:userName", rt.getProfile)
+	rt.router.GET("/Users/", rt.getProfile)
 	rt.router.GET("/Users/me/myStream", rt.getMyStream)
 	rt.router.POST("/Images", rt.upload)
 	rt.router.DELETE("/Images/:postId", rt.deletePhoto)

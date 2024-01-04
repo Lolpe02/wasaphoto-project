@@ -9,7 +9,7 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("content-type", "application/json")
 
 	// take id parameters from the path (person to follow)
-	IdtoFollow, err := readPath(ps, "followId")
+	IdtoFollow, err := readPath(ps, "banedId")
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) //400
