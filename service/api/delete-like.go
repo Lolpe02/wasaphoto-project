@@ -13,7 +13,10 @@ func (rt *_router) unlike(w http.ResponseWriter, r *http.Request, ps httprouter.
 	creator, err := extractToken(r)
 	if err != nil {
 		// bad request
-		json.NewEncoder(w).Encode(http.StatusForbidden) // 403
+		err = json.NewEncoder(w).Encode(http.StatusForbidden) // 403
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	// Parse the path parameter for the photo id
 	var pid int64

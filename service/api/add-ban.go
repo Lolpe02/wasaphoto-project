@@ -15,7 +15,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	err := json.NewDecoder(r.Body).Decode(&IdtoBan)
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 
@@ -23,18 +23,18 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) //401
+		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 	ban := ban{IdtoBan, yourId}
-	err = rt.db.BanUser(ban.BannerID, ban.BannedID)
+	err = rt.db.BanUser(ban.BannerId, ban.BannedId)
 	if err != nil {
 		// could not follow, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
 
 	// return the list of post ids of that user
-	w.WriteHeader(http.StatusCreated) //200
+	w.WriteHeader(http.StatusCreated) // 200
 
 }

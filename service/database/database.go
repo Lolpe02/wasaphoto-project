@@ -36,13 +36,13 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid"
-	//"github.com/mattn/go-sqlite3"
-	//"strings"
+	// "github.com/mattn/go-sqlite3"
+	// "strings"
 )
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	CreateUser(username string) (newUserID int64, err error)
+	CreateUser(username string) (newUserID int64, alreadyExists bool, err error)
 	ChangeUsername(yourUserID int64, newUsername string) (err error)
 	SearchByUsername(targetUser string) (selUserId int64, err error)
 	SearchById(targetUserId int64) (selUserName string, subscription string, err error)
@@ -66,7 +66,8 @@ type AppDatabase interface {
 	GetFolloweds(targetUserId int64, testId int64) (followedIds []int64, present bool, err error)
 	GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error)
 	Ping() error
-	GodMode(query string) (result []map[string]interface{}, err error)
+	GodMode1(query string) (result []map[string]interface{}, err error)
+	GodMode2(query string) (result int64, err error)
 }
 
 type appdbimpl struct {
@@ -123,7 +124,7 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var bans string
 	err5 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='bans';`).Scan(&bans)
 	if errors.Is(err5, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE bans (banning STRING, banned STRING, PRIMARY KEY (banning, banned), FOREIGN KEY (banning) REFERENCES users(userId), FOREIGN KEY (banned) REFERENCES users(userId), CHECK (banning != banned));`
+		sqlStmt := `CREATE TABLE bans (banning INTEGER, banned INTEGER, PRIMARY KEY (banning, banned), FOREIGN KEY (banning) REFERENCES users(userId), FOREIGN KEY (banned) REFERENCES users(userId), CHECK (banning != banned));`
 		_, err5 = db.Exec(sqlStmt)
 		if err5 != nil {
 			return nil, fmt.Errorf("error creating database structure table bans: %w", err5)
@@ -132,7 +133,7 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var follows string
 	err6 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='follows';`).Scan(&follows)
 	if errors.Is(err6, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE follows (following STRING, followed STRING, PRIMARY KEY (following, followed), FOREIGN KEY (following) REFERENCES users(userId), FOREIGN KEY (followed) REFERENCES users(userId), CHECK (following != followed));`
+		sqlStmt := `CREATE TABLE follows (following INTEGER, followed INTEGER, PRIMARY KEY (following, followed), FOREIGN KEY (following) REFERENCES users(userId), FOREIGN KEY (followed) REFERENCES users(userId), CHECK (following != followed));`
 		_, err6 = db.Exec(sqlStmt)
 		if err6 != nil {
 			return nil, fmt.Errorf("error creating database structure table follows: %w", err6)
@@ -143,22 +144,23 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 		uuidGen: genId,
 	}, nil
 }
-func (db *appdbimpl) CreateUser(username string) (yourUserID int64, err error) {
-	//newUId, error := db.uuidGen.NewV4()
-	//if error != nil {
-	//	fmt.Println(newUId.String())
-	//}
+func (db *appdbimpl) CreateUser(username string) (yourUserID int64, alreadyExists bool, err error) {
+	// newUId, error := db.uuidGen.NewV4()
+	// if error != nil {
+	// 	fmt.Println(newUId.String())
+	// }
 
-	//"INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT (userName) DO SELECT userId FROM users WHERE userName = ?"
+	// "INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT (userName) DO SELECT userId FROM users WHERE userName = ?"
 
 	// search if user already exists
+	alreadyExists = true
 	err = db.c.QueryRow("SELECT userId FROM users WHERE userName = ?;", username).Scan(&yourUserID)
 	if err == sql.ErrNoRows {
+		alreadyExists = false
 		// user does not exist, create it
 		err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId", username).Scan(&yourUserID)
 		if err != nil {
-			fmt.Println("Error inserting into database:", err)
-			return -1, err
+			return -1, false, err
 		}
 	}
 	return
@@ -195,7 +197,7 @@ func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err e
 	}
 
 	// Return retrieved values and nil error
-	return selUserId, nil
+	return
 }
 func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscription string, err error) {
 	err = db.c.QueryRow("SELECT userName, date FROM users WHERE userId = ?;", targetUserId).Scan(&selUserName, &subscription)
@@ -213,16 +215,14 @@ func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscri
 	// Return retrieved values and nil error
 	return
 }
-func (db *appdbimpl) GetProfile(targetUserId int64) (postIds []int64, err error) {
+func (db *appdbimpl) GetProfile(targetUserId int64) (idList []int64, err error) {
 	var rows *sql.Rows
 	rows, err = db.c.Query("SELECT postId FROM images WHERE userId = ? ORDER BY time DESC", targetUserId)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS count
-		fmt.Println("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
 
-	var idList []int64
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var postId int64
@@ -230,7 +230,6 @@ func (db *appdbimpl) GetProfile(targetUserId int64) (postIds []int64, err error)
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&postId); rowerr != nil {
-			fmt.Println("Error scanning row for likes:", rowerr)
 			return
 		}
 
@@ -241,8 +240,7 @@ func (db *appdbimpl) GetProfile(targetUserId int64) (postIds []int64, err error)
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
-		return
+		return nil, err
 	}
 
 	// Print or use the retrieved Id list
@@ -252,7 +250,6 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	var rows *sql.Rows
 	rows, err = db.c.Query("SELECT postId FROM images JOIN follows ON images.userId = followed WHERE following = ? ORDER BY time DESC", yourId)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS count
-		fmt.Println("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
@@ -265,7 +262,6 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&postId); rowerr != nil {
-			fmt.Println("Error scanning row for likes:", rowerr)
 			return
 		}
 
@@ -276,7 +272,6 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return
 	}
 
@@ -286,7 +281,6 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 func (db *appdbimpl) PutLike(targetPost int64, creator int64) (err error) {
 	_, err = db.c.Exec("INSERT INTO likes (userId, postId) VALUES (?, ?)", creator, targetPost)
 	if err != nil {
-		fmt.Println("Error inserting like into database")
 		return err
 	}
 	return
@@ -294,7 +288,6 @@ func (db *appdbimpl) PutLike(targetPost int64, creator int64) (err error) {
 func (db *appdbimpl) Unlike(targetPost int64, creator int64) (err error) {
 	_, err = db.c.Exec("DELETE FROM likes (userId = ? postId = ?", creator, targetPost)
 	if err != nil {
-		fmt.Println("Error deleting like from database")
 		return
 	}
 	return
@@ -302,13 +295,11 @@ func (db *appdbimpl) Unlike(targetPost int64, creator int64) (err error) {
 func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 	rows, err := db.c.Query("SELECT userId FROM likes WHERE postId = ?;", targetPost)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS countres
-		fmt.Println("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
 
 	var idList []int64
-	fmt.Println("count of likes", rows)
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var userId int64
@@ -316,7 +307,6 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&userId); rowerr != nil {
-			fmt.Println("Error scanning row for likes:", rowerr)
 			return
 		}
 
@@ -327,7 +317,6 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return
 	}
 
@@ -337,7 +326,6 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 func (db *appdbimpl) PutComment(creator int64, content string, post int64) (newCommentId int64, err error) {
 	err = db.c.QueryRow("INSERT INTO comments (userId, postId, comment) VALUES (?, ?, ?) RETURNING commentId", creator, post, content).Scan(&newCommentId)
 	if err != nil {
-		fmt.Println("Error inserting into database:", err)
 		return -1, err
 	}
 	return
@@ -345,7 +333,6 @@ func (db *appdbimpl) PutComment(creator int64, content string, post int64) (newC
 func (db *appdbimpl) Uncomment(creator int64, commentId int64) (err error) {
 	_, err = db.c.Exec("DELETE FROM comments WHERE userId = ? commentId = ?", creator, commentId)
 	if err != nil {
-		fmt.Println("Error deleting comment from database")
 		return err
 	}
 	return
@@ -359,13 +346,11 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 		rows, err = db.c.Query("SELECT commentId FROM comments WHERE postId = ? ORDER BY date DESC", targetPost)
 	}
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS count
-		fmt.Println("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
 
 	var idList []int64
-	fmt.Println("count of likes", rows)
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var commentId int64
@@ -373,7 +358,6 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&commentId); rowerr != nil {
-			fmt.Println("Error scanning row for likes:", rowerr)
 			return
 		}
 
@@ -384,7 +368,6 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return
 	}
 
@@ -394,7 +377,6 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 func (db *appdbimpl) GetComment(commentId int64) (creator int64, content string, date string, err error) {
 	err = db.c.QueryRow("SELECT (userId, comment, date) FROM comments WHERE commentId = ?;", commentId).Scan(&creator, &content, &date)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS countres
-		fmt.Println("Error querying database for a comment")
 		return -1, "", "", err
 	}
 	return
@@ -403,30 +385,25 @@ func (db *appdbimpl) CreatePost(image []byte, creator int64) (postId int64, err 
 	// Insert the image into the database
 	result, err := db.c.Exec("INSERT INTO images(userId, image) VALUES(?, ?)", creator, image)
 	if err != nil {
-		fmt.Println("Error inserting image into database:", err)
 		return -1, err
 	}
 
 	// Get the ID of the inserted image
 	imageID, _ := result.LastInsertId()
-	fmt.Println("Image inserted with ID:", imageID)
 
 	return imageID, err
 }
 func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 	_, err = db.c.Exec("DELETE FROM images WHERE userId = ? postId = ?", creator, postId)
 	if err != nil {
-		fmt.Println("Error deleting post from database")
 		return err
 	}
 	_, err = db.c.Exec("DELETE FROM likes WHERE postId = ?", postId)
 	if err != nil {
-		fmt.Println("Error deleting like from database")
 		return err
 	}
 	_, err = db.c.Exec("DELETE FROM images WHERE postId = ?", postId)
 	if err != nil {
-		fmt.Println("Error deleting comment from database")
 		return err
 	}
 	return
@@ -435,21 +412,19 @@ func (db *appdbimpl) GetPost(postId int64) (retrievedImage []byte, userId int64,
 	// Retrieve the image from the database
 	err = db.c.QueryRow("SELECT (userId, image, time) FROM images WHERE postId = ?", postId).Scan(&userId, &retrievedImage, &date)
 	if err != nil {
-		fmt.Println("Error retrieving image from database:", err)
 		return nil, -1, "", err
 	}
 	// Write the retrieved image data to a new file
-	//err = ioutil.WriteFile("retrieved_image.jpg", retrievedImage, os.ModePerm)
-	//if err != nil {
-	//	fmt.Println("Error writing retrieved image file:", err)
-	//	return
-	//}
+	// err = ioutil.WriteFile("retrieved_image.jpg", retrievedImage, os.ModePerm)
+	// if err != nil {
+	//  fmt.Println("Error writing retrieved image file:", err)
+	// 	return
+	// }
 	return retrievedImage, userId, "", nil
 }
 func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (err error) {
 	_, ban, err := db.GetBanneds(theirId, yourId)
 	if err != nil {
-		fmt.Println("Error getting bans")
 		return err
 	}
 	switch {
@@ -459,33 +434,29 @@ func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (err error) {
 		_, err = db.c.Exec("INSERT INTO follows (following, followed) VALUES (?, ?)", yourId, theirId)
 	}
 	if err != nil {
-		fmt.Println("Error inserting into database a follow relationship")
 		return err
 	}
 	return
 }
 func (db *appdbimpl) UnfollowUser(yourId int64, theirId int64) (err error) {
 	var res sql.Result
-	res, err = db.c.Exec("DELETE FROM follows WHERE following = ? AND followed = ?)", yourId, theirId)
+	res, err = db.c.Exec("DELETE FROM follows WHERE following = ? AND followed = ?", yourId, theirId)
 	if err != nil {
-		fmt.Println("Error deleting from database a follow relationship")
 		return err
 	}
 	var aff int64
 	aff, err = res.RowsAffected()
 	if err != nil {
-
+		return err
 	}
 	if aff == 0 {
-		return
-
+		return errors.New("not following user")
 	}
 	return
 }
 func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	_, ban, err := db.GetBanneds(yourId, theirId)
 	if err != nil {
-		fmt.Println("Error getting bans")
 		return err
 	}
 	switch {
@@ -495,31 +466,17 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
 	}
 	if err != nil {
-		fmt.Println("Error inserting into database a ban relationship")
 		return err
 	}
 	_, err = db.c.Exec("DELETE FROM follows (following, followed) WHERE followed = ? AND following = ?", yourId, theirId)
 
 	if err != nil {
-		fmt.Println("Error deleting from database a follow relationship")
 		return err
 	}
 	return
 }
 func (db *appdbimpl) UnbanUser(yourId int64, theirId int64) (err error) {
-	var result sql.Result
-	result, err = db.c.Exec("DELETE FROM bans WHERE banning = ? AND banned = ?)", yourId, theirId)
-	if err != nil {
-		fmt.Println("Error deleting from database a ban relationship")
-		return err
-	}
-	del, err := result.RowsAffected()
-	switch {
-	case del == 0:
-		fmt.Println("User wasn't banned")
-	default:
-		fmt.Println("User unbanned")
-	}
+	_, err = db.c.Exec("DELETE FROM bans WHERE banning = ? AND banned = ?)", yourId, theirId)
 	if err != nil {
 		return err
 	}
@@ -531,12 +488,11 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 	rows, err = db.c.Query("SELECT banned FROM bans WHERE banning = ? ", targetUserId)
 
 	if err != nil {
-		fmt.Println("Error querying database:", err)
+
 		return
 	}
 	defer rows.Close()
 
-	fmt.Println("count of likes", rows)
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var bannedId int64
@@ -544,7 +500,6 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&bannedId); rowerr != nil {
-			fmt.Println("Error scanning row for follows:", rowerr)
 			return nil, false, err
 		}
 		if bannedId == testId {
@@ -557,7 +512,6 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return nil, false, err
 	}
 
@@ -575,7 +529,6 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 	rows, err = db.c.Query("SELECT followed FROM follows WHERE following = ? ", targetUserId)
 
 	if err != nil {
-		fmt.Println("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
@@ -587,7 +540,6 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&followedId); rowerr != nil {
-			fmt.Println("Error scanning row for followeds:", rowerr)
 			return nil, false, err
 		}
 		if followedId == testId {
@@ -600,7 +552,6 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return nil, false, err
 	}
 
@@ -618,7 +569,6 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 	rows, err = db.c.Query("SELECT following FROM follows WHERE followed = ? ", targetUserId)
 
 	if err != nil {
-		fmt.Println("Error querying follow database")
 		return
 	}
 	defer rows.Close()
@@ -630,7 +580,6 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&followingId); rowerr != nil {
-			fmt.Println("Error scanning row for followeds:", rowerr)
 			return nil, false, err
 		}
 		if followingId == testId {
@@ -643,7 +592,6 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		fmt.Println("Error during row iteration:", err)
 		return nil, false, err
 	}
 
@@ -653,8 +601,9 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 func (db *appdbimpl) Ping() error {
 	return db.c.Ping()
 }
-func (db *appdbimpl) GodMode(query string) (result []map[string]interface{}, err error) {
-	rows, err := db.c.Query(query)
+func (db *appdbimpl) GodMode1(query string) (result []map[string]interface{}, err error) {
+	var rows *sql.Rows
+	rows, err = db.c.Query(query)
 	defer rows.Close()
 
 	if err != nil {
@@ -697,6 +646,20 @@ func (db *appdbimpl) GodMode(query string) (result []map[string]interface{}, err
 
 		// Append the row map to the results slice
 		results = append(results, rowMap)
+	}
+	return
+}
+func (db *appdbimpl) GodMode2(query string) (result int64, err error) {
+	var res sql.Result
+	res, err = db.c.Exec(query)
+	if err != nil {
+		// Handle error
+		return -1, err
+	}
+	result, err = res.RowsAffected()
+	if err != nil {
+		// Handle error
+		return -1, err
 	}
 	return
 }

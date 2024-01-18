@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -13,8 +14,12 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	yourId, err := extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.Write([]byte("not authenticated"))
-		w.WriteHeader(http.StatusUnauthorized) //401
+		_, err = w.Write([]byte("not authenticated\n"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized) // 01
 		return
 	}
 	// Parse the request body

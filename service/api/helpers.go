@@ -4,10 +4,10 @@ package api
 import (
 	"errors"
 
-	//"fmt"
+	// "fmt"
 	"strconv"
-	//"github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
-	//"github.com/julienschmidt/httprouter"
+	// "github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
+	// "github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
 
@@ -19,7 +19,7 @@ func readPath(ps httprouter.Params, field string) (Id int64, err error) {
 	if err != nil {
 		return -1, errors.New("no field found")
 	}
-	return Id, nil
+	return
 }
 
 func extractToken(r *http.Request) (bearer int64, err error) {
@@ -40,6 +40,15 @@ func extractToken(r *http.Request) (bearer int64, err error) {
 	}
 	return -1, errors.New("something wrong with authorization header")
 }
-func isValid(str string) bool {
-	return 3 <= len(str) && len(str) <= 20
+func isValid(name string) bool {
+	// check substring
+	var valid = true
+	swears := []string{"dick", "cock", "bitch", "ass", "pussy", "fuck", "stupid"}
+	for _, swear := range swears {
+		if strings.Contains(name, swear) {
+			valid = false
+			break
+		}
+	}
+	return valid && 3 <= len(name) && len(name) <= 20
 }

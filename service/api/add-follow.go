@@ -15,7 +15,7 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	err := json.NewDecoder(r.Body).Decode(&IdtoFollow)
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 
@@ -23,17 +23,17 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) //401
+		w.WriteHeader(http.StatusUnauthorized) // 01
 		return
 	}
 	follow := follow{yourId, IdtoFollow}
-	err = rt.db.FollowUser(follow.FollowingID, follow.FollowedID)
+	err = rt.db.FollowUser(follow.FollowingId, follow.FollowedId)
 	if err != nil {
 		// could not follow, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 00
 		return
 	}
 
 	// return the list of post ids of that user
-	w.WriteHeader(http.StatusCreated) //200
+	w.WriteHeader(http.StatusCreated) // 00
 }

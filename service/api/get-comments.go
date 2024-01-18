@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,9 +14,8 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 	// take parameters from the path and turn string to int64
 	postId, err := readPath(ps, "postId")
 	if err != nil {
-		fmt.Println(err)
 		// could not parse the post id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 	// get possible query parameters named user
@@ -27,14 +25,14 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		commenter, err := strconv.ParseInt(query, 10, 64)
 		if err != nil {
 			// could not parse the user id, throw bad request
-			w.WriteHeader(http.StatusBadRequest) //400
+			w.WriteHeader(http.StatusBadRequest) // 400
 			return
 		}
 		// get the list of comment ids
 		commentIds, err = rt.db.GetCommentList(postId, commenter)
 		if err != nil {
 			// could not get likes, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) //500
+			w.WriteHeader(http.StatusInternalServerError) // 500
 			return
 		}
 	} else {
@@ -42,13 +40,13 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		commentIds, err = rt.db.GetCommentList(postId, -1)
 		if err != nil {
 			// could not get likes, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) //500
+			w.WriteHeader(http.StatusInternalServerError) // 500
 			return
 		}
 	}
 	if err != nil {
 		// could not get likes, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
 	// iterate over the list of comment ids and create comment objects list
@@ -58,7 +56,7 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		creator, content, date, errcom := rt.db.GetComment(commentId)
 		if errcom != nil {
 			// could not get comment, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) //500
+			w.WriteHeader(http.StatusInternalServerError) // 500
 			return
 		}
 		// create the comment object
@@ -68,6 +66,11 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// return the list of user ids
-	w.WriteHeader(http.StatusOK) //200
-	json.NewEncoder(w).Encode(comments)
+	w.WriteHeader(http.StatusOK) // 200
+	err = json.NewEncoder(w).Encode(comments)
+	if err != nil {
+		// could not get likes, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		return
+	}
 }
