@@ -1,20 +1,21 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// take id parameters from the path (person to unfollow)
 	IdtounFollow, err := readPath(ps, "followId")
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) // 400
-		_, err = w.Write([]byte(err.Error() + ", you fool"))
+		err = json.NewEncoder(w).Encode(err.Error() + ", you fool")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 			return
@@ -32,24 +33,24 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 	if err != nil {
 		if err.Error() == "not following user" {
 			w.WriteHeader(http.StatusNotFound) // 404
-			/*_, err1 := w.Write([]byte(err.Error() + ", you fool"))
-			if err1 != nil {
+			err = json.NewEncoder(w).Encode(err.Error() + ", you fool")
+			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 				return
-			}*/
+			}
 			return
 		} else {
 			// could not unfollow, throw internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500
-			_, err2 := w.Write([]byte(err.Error() + ", sopmething went wrong"))
-			if err2 != nil {
+			err = json.NewEncoder(w).Encode(err.Error() + ", sopmething went wrong")
+			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 				return
 			}
 			return
 		}
 	}
-	_, err = w.Write([]byte("\nUnfollowed(:\n"))
+	err = json.NewEncoder(w).Encode("Unfollowed\n")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return

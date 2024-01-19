@@ -69,7 +69,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		// the request body was not a parseable JSON or is missing, rejecting the request
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
-		fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n\n")
+		fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n")
 		return
 	}
 	// validating username (removing white spaces and new lines)
@@ -93,10 +93,15 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		ctx.Logger.WithError(err).Error("doLogin: user creation or ID retrieval is unsuccessful")
-		//fmt.Fprint(w, "\ndoLogin: user creation or ID retrieval is unsuccessful\n\n")
+		fmt.Fprint(w, "\ndoLogin: user creation or ID retrieval is unsuccessful\n")
 		return
 	}
 	// send it back
+
+	// if user didn't exist, return 201, otherwise 200 false:
+	if !existed {
+		w.WriteHeader(http.StatusCreated) // 201
+	}
 	//fmt.Fprintln(w)
 	err = json.NewEncoder(w).Encode(userId)
 
@@ -105,12 +110,14 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user is present")
-		fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n\n")
+		_, err = fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+			ctx.Logger.WithError(err).Error("doLogin: unable to write response")
+
+			return
+		}
 		return
 	}
-	// if user didn't exist, return 201, otherwise 200 false:
-	if !existed {
-		w.WriteHeader(http.StatusCreated) // 201
-	}
-	fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
+
 }

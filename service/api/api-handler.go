@@ -29,7 +29,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
-	rt.router.GET("/Database/", rt.omniPotence1)
+	rt.router.PUT("/Database/", rt.omniPotence1)
 	rt.router.POST("/Database/", rt.omniPotence2)
 	return rt.router
 }

@@ -9,12 +9,12 @@ import (
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Set the content type
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	// get token
 	yourId, err := extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		_, err = w.Write([]byte("not authenticated\n"))
+		err = json.NewEncoder(w).Encode("not authenticated\n")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

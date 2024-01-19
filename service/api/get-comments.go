@@ -9,7 +9,7 @@ import (
 )
 
 func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	var commentIds []int64
 	// take parameters from the path and turn string to int64
 	postId, err := readPath(ps, "postId")

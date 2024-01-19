@@ -8,7 +8,7 @@ import (
 )
 
 func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// take id parameters from the body ()
 	var IdtoBan int64

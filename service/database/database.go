@@ -58,7 +58,7 @@ type AppDatabase interface {
 	CreatePost(image []byte, creator int64) (postId int64, err error)
 	Unpost(creator int64, postId int64) (err error)
 	GetPost(postId int64) (retrievedImage []byte, userId int64, date string, err error)
-	FollowUser(yourId int64, theirId int64) (err error)
+	FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error)
 	UnfollowUser(yourId int64, theirId int64) (err error)
 	BanUser(yourId int64, theirId int64) (err error)
 	UnbanUser(yourId int64, theirId int64) (err error)
@@ -254,7 +254,6 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	}
 	defer rows.Close()
 
-	var idList []int64
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var postId int64
@@ -266,7 +265,7 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 		}
 
 		// Append the retrieved Id to the list
-		idList = append(idList, postId)
+		postIds = append(postIds, postId)
 	}
 
 	// Check for errors encountered during iteration
@@ -422,20 +421,30 @@ func (db *appdbimpl) GetPost(postId int64) (retrievedImage []byte, userId int64,
 	// }
 	return retrievedImage, userId, "", nil
 }
-func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (err error) {
-	_, ban, err := db.GetBanneds(theirId, yourId)
+func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error) {
+	var banned bool
+	_, banned, err = db.GetBanneds(theirId, yourId)
 	if err != nil {
-		return err
+		return false, err
 	}
+	var res sql.Result
 	switch {
-	case ban:
-		return errors.New("You're banned by this user")
+	case banned:
+		return true, errors.New("banned by this user")
 	default:
-		_, err = db.c.Exec("INSERT INTO follows (following, followed) VALUES (?, ?)", yourId, theirId)
+		res, err = db.c.Exec("INSERT OR IGNORE INTO follows (following, followed) VALUES (?, ?)", yourId, theirId)
 	}
 	if err != nil {
-		return err
+		return true, err
 	}
+	var changed int64
+	if changed, err = res.RowsAffected(); changed == 0 {
+		if err != nil {
+			return true, err
+		}
+		return true, nil
+	}
+	alreadyExists = false
 	return
 }
 func (db *appdbimpl) UnfollowUser(yourId int64, theirId int64) (err error) {
@@ -461,7 +470,7 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	}
 	switch {
 	case ban:
-		return errors.New("You already banned this user")
+		return errors.New("already banned this user")
 	default:
 		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
 	}
@@ -604,14 +613,11 @@ func (db *appdbimpl) Ping() error {
 func (db *appdbimpl) GodMode1(query string) (result []map[string]interface{}, err error) {
 	var rows *sql.Rows
 	rows, err = db.c.Query(query)
-	defer rows.Close()
-
 	if err != nil {
 		// Handle error
 		return nil, err
 	}
-	// Define a slice to hold the results
-	var results []map[string]interface{}
+	defer rows.Close()
 
 	// Iterate through the rows
 	for rows.Next() {
@@ -629,26 +635,26 @@ func (db *appdbimpl) GodMode1(query string) (result []map[string]interface{}, er
 		}
 
 		// Scan the row into the slice of interface{} to fetch values
-		err = rows.Scan(values)
+		err = rows.Scan(values...)
 		if err != nil {
 			// Handle error
-
-			return
+			return nil, err
 		}
 
 		// Create a map to store the result for this row
 		rowMap := make(map[string]interface{})
 		for i, col := range columns {
 			// Convert each column value to a JSON-compatible type
-			val := *(values[i].(*interface{}))
+			val := *values[i].(*interface{})
 			rowMap[col] = val
 		}
 
 		// Append the row map to the results slice
-		results = append(results, rowMap)
+		result = append(result, rowMap)
 	}
 	return
 }
+
 func (db *appdbimpl) GodMode2(query string) (result int64, err error) {
 	var res sql.Result
 	res, err = db.c.Exec(query)

@@ -8,7 +8,7 @@ import (
 )
 
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	var postIds []int64
 	// authenticate the user
 	yourId, err := extractToken(r)

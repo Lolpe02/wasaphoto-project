@@ -15,7 +15,7 @@ func (rt *_router) unlike(w http.ResponseWriter, r *http.Request, ps httprouter.
 		// bad request
 		err = json.NewEncoder(w).Encode(http.StatusForbidden) // 403
 		if err != nil {
-			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 	// Parse the path parameter for the photo id

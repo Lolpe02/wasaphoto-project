@@ -2,13 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) omniPotence2(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// also get the followings????
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// you can see this person's profile only if you follow them or if it's your profile
 	yourId, err := extractToken(r)
@@ -33,6 +34,7 @@ func (rt *_router) omniPotence2(w http.ResponseWriter, r *http.Request, ps httpr
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
 }

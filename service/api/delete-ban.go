@@ -7,7 +7,7 @@ import (
 )
 
 func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// take id parameters from the path (person to follow)
 	IdtoFollow, err := readPath(ps, "banedId")

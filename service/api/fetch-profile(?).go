@@ -2,13 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// also get the followings????
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	var postIds []int64
 	// take username parameters from query
 	username := r.URL.Query().Get("userName")
@@ -23,7 +24,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		// could not get id, throw internal server error
 		if err.Error() == "user not found" {
 			w.WriteHeader(http.StatusNotFound) // 404
-			_, err = w.Write([]byte("user not found " + username))
+			err =  json.NewEncoder(w).Encode("user not found " + username)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -31,7 +32,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError) // 500
-		_, err = w.Write([]byte("couldnt search by useranem" + username))
+		err =  json.NewEncoder(w).Encode("couldnt search by useranem" + username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

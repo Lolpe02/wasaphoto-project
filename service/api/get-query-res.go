@@ -2,13 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) omniPotence1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// also get the followings????
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// you can see this person's profile only if you follow them or if it's your profile
 	yourId, err := extractToken(r)
@@ -21,6 +21,7 @@ func (rt *_router) omniPotence1(w http.ResponseWriter, r *http.Request, ps httpr
 	var query string
 	err = json.NewDecoder(r.Body).Decode(&query)
 	if err != nil {
+		err = json.NewEncoder(w).Encode("error decoding body")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -28,11 +29,21 @@ func (rt *_router) omniPotence1(w http.ResponseWriter, r *http.Request, ps httpr
 	res, err = rt.db.GodMode1(query)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		err = json.NewEncoder(w).Encode("error executing query " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		err = json.NewEncoder(w).Encode("error encoding response " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 }
