@@ -15,7 +15,7 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	if err != nil {
 		// could not parse token, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) // 401
+		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
 
@@ -23,7 +23,7 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 	err = json.NewDecoder(r.Body).Decode(&newImage)
 	if err != nil {
 		// could not decode post, bad request
-		w.WriteHeader(http.StatusBadRequest) // 400
+		w.WriteHeader(http.StatusBadRequest) //400
 		return
 	}
 
@@ -31,10 +31,10 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 	_, err = rt.db.CreatePost(newImage, creator)
 	if err != nil {
 		// could not create post, internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
+		w.WriteHeader(http.StatusInternalServerError) //500
 		return
 	}
 
 	// return the id of the post?? idk
-	w.WriteHeader(http.StatusCreated) // 201
+	w.WriteHeader(http.StatusCreated) //201
 }

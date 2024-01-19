@@ -40,10 +40,11 @@ Possible outcomes:
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
+
+	"github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
+	"github.com/julienschmidt/httprouter"
 )
 
 /*
@@ -67,7 +68,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// checking if decoding operation ended successfully
 	if err != nil {
 		// the request body was not a parseable JSON or is missing, rejecting the request
-		w.WriteHeader(http.StatusInternalServerError) // 500
+		w.WriteHeader(http.StatusBadRequest) //400
 		ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
 		fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n")
 		return
@@ -78,7 +79,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// checking if the username is valid
 	if !isValid(userName) {
 		// the username is not valid, rejecting request
-		w.WriteHeader(http.StatusBadRequest) // 400
+		w.WriteHeader(http.StatusBadRequest) //400
 		fmt.Fprint(w, "\ndoLogin: the username is not valid\n\n")
 		return
 	}
@@ -91,9 +92,10 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// 6.
 	// if user creation or ID retrieval is unsuccessful
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // 500
+		w.WriteHeader(http.StatusInternalServerError) //500
 		ctx.Logger.WithError(err).Error("doLogin: user creation or ID retrieval is unsuccessful")
 		fmt.Fprint(w, "\ndoLogin: user creation or ID retrieval is unsuccessful\n")
+		fmt.Fprint(w, "\ndoLogin: user creation or ID retrieval is unsuccessful\n\n")
 		return
 	}
 	// send it back
@@ -108,7 +110,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// 4.
 	// if encoding operation is unsuccessful though the user is present
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // 500
+		w.WriteHeader(http.StatusInternalServerError) //500
 		ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user is present")
 		_, err = fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n")
 		if err != nil {
@@ -119,5 +121,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		}
 		return
 	}
+
+	w.WriteHeader(http.StatusOK) //200
+	fmt.Fprint(w, "\nUser log-in action successful.\nThe user ID is returned in the content.\n\n")
 
 }

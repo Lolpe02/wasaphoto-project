@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
@@ -12,9 +13,7 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	creator, err := extractToken(r)
 	if err != nil {
 		// bad request
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Println(err)
-		return
+		json.NewEncoder(w).Encode(http.StatusForbidden) // 403
 	}
 	// Parse the path parameter for the photo id
 	var pid int64

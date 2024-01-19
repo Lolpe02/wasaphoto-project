@@ -184,7 +184,7 @@ func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err e
 	return nil
 }
 func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err error) {
-	err = db.c.QueryRow("SELECT userId FROM users WHERE userName = ?;", targetUser).Scan(&selUserId)
+	err = db.c.QueryRow("SELECT user_id FROM users WHERE username = ?;", targetUser).Scan(&selUserId)
 
 	// Handling sql.ErrNoRows
 	if err != nil {
@@ -200,7 +200,7 @@ func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err e
 	return
 }
 func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscription string, err error) {
-	err = db.c.QueryRow("SELECT userName, date FROM users WHERE userId = ?;", targetUserId).Scan(&selUserName, &subscription)
+	err = db.c.QueryRow("SELECT user_id, user_date FROM users WHERE username = ?;", targetUserId).Scan(&selUserName, &subscription)
 
 	// Handling sql.ErrNoRows
 	if err != nil {

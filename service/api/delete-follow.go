@@ -2,9 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/julienschmidt/httprouter"
+	"net/http"
 )
 
 func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -27,7 +26,7 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) // 401
+		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
 	err = rt.db.UnfollowUser(yourId, IdtounFollow)
@@ -56,4 +55,5 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
+	w.WriteHeader(http.StatusOK) //200
 }

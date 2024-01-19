@@ -7,7 +7,7 @@ servers:
   - url: http://localhost:3000
     description: Local server
 tags:
-  - name: user
+  - name: user 
     description: Operations related to users
   - name: post
     description: Operations related to posts
@@ -45,26 +45,26 @@ components:
           minLength: 6
           maxLength: 20
         #\#like:
-        #description: number of likes
-        #type: integer
-        #default: 0
-        #minimum: 0
-        #maximum: 9999999999999999999
-        #readOnly: true
+          #description: number of likes
+          #type: integer
+          #default: 0
+          #minimum: 0
+          #maximum: 9999999999999999999
+          #readOnly: true
         #likes:
-        #description: list of likes of the post
-        #type: array
-        #items:
-        #  $ref: "#/components/schemas/Like"
-        #minItems: 0
-        #maxItems: 9999999999999999999
+          #description: list of likes of the post
+          #type: array
+          #items: 
+          #  $ref: "#/components/schemas/Like"
+          #minItems: 0
+          #maxItems: 9999999999999999999
         #comments:
-        #description: list of comments of the post
-        #type: array
-        #items:
-        #  $ref: "#/components/schemas/Comment"
-        #minItems: 0
-        #maxItems: 9999999
+          #description: list of comments of the post
+          #type: array
+          #items: 
+          #  $ref: "#/components/schemas/Comment"
+          #minItems: 0
+          #maxItems: 9999999
     Like:
       title: Post upvote
       description: post upvote
@@ -92,7 +92,7 @@ components:
         content:
           description: user's input string
           type: string
-          pattern: "(.*?){1,300}$"
+          pattern: '(.*?){1,300}$'
           minLength: 1
           maxLength: 300
           example: "I wish I knew how to write an api"
@@ -108,7 +108,7 @@ components:
           type: string
           minLength: 3
           maxLength: 25
-          pattern: "(.*?){3,25}$"
+          pattern: '(.*?){3,25}$' 
           example: "SkibidiSigma420"
           readOnly: false
         date:
@@ -121,7 +121,7 @@ components:
         posted:
           description: list of user's post
           type: array
-          items:
+          items: 
             $ref: "#/components/schemas/Post/properties/id"
           minItems: 0
           maxItems: 10000
@@ -129,7 +129,7 @@ components:
         following:
           description: list of user's followed users
           type: array
-          items:
+          items: 
             $ref: "#/components/schemas/User/properties/userId"
           minItems: 0
           maxItems: 10000
@@ -137,13 +137,13 @@ components:
         followed:
           description: list of user's followers
           type: array
-          items:
+          items: 
             $ref: "#/components/schemas/User/properties/userId"
           minItems: 0
           maxItems: 10000
           readOnly: true
   securitySchemes:
-    bearerAuth: # arbitrary name for the security scheme
+    bearerAuth:            # arbitrary name for the security scheme
       type: http
       scheme: bearer
       bearerFormat: JWT
@@ -195,7 +195,7 @@ components:
             example: "Server error"
 security:
   - bearerAuth: []
-
+             
 paths:
   /session:
     post:
@@ -221,20 +221,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/identifier"
-        "201":
+        '201':
           description: User log-in action successful, you'll receive your uid
           content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/identifier"
+              application/json:                 
+                schema:
+                  $ref: "#/components/schemas/identifier"
         "500":
-          $ref: "#/components/responses/ServerError"
+          description: something went wrong in the server
   /Images/{postId}/likes/:
     parameters:
       - name: postId
         in: path
-        schema:
-          $ref: "#/components/schemas/Post/properties/id"
+        schema: 
+          $ref: "#/components/schemas/identifier"
         required: true
     get:
       summary: get likes of the post
@@ -249,8 +249,8 @@ paths:
               schema:
                 description: array of userlikes
                 type: array
-                items: 
-                    $ref: "#/components/schemas/Like/properties/creator"
+                items:
+                  {$ref: "#/components/schemas/Like"}
                 minItems: 0
                 maxItems: 10000
         "403":
@@ -263,12 +263,12 @@ paths:
     parameters:
       - name: yourId
         in: path
-        schema:
+        schema: 
           $ref: "#/components/schemas/identifier"
         required: true
       - name: postId
         in: path
-        schema:
+        schema: 
           $ref: "#/components/schemas/identifier"
         required: true
     put:
@@ -276,17 +276,21 @@ paths:
       description: insert a like object in the like list of the post
       operationId: likePhoto
       tags: ["like", "post"]
-
+      
       requestBody:
         description: like object
         required: true
         content:
           application/json:
-            schema:
+            schema: 
               $ref: "#/components/schemas/Like"
       responses:
         "201":
-          $ref: "#/components/responses/OkDone"
+          description: like created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Like"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -311,7 +315,7 @@ paths:
     parameters:
       - name: postId
         in: path
-        schema:
+        schema: 
           $ref: "#/components/schemas/identifier"
         required: true
     get:
@@ -347,7 +351,7 @@ paths:
         required: true
         content:
           application/json:
-            schema:
+            schema: 
               $ref: "#/components/schemas/Comment/properties/content"
       responses:
         "201":
@@ -360,22 +364,22 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Images/{postId}/comments/{commentId}:
     parameters:
-      - name: commentId
-        in: path
-        schema:
-          $ref: "#/components/schemas/identifier"
-        required: true
-      - name: postId
-        in: path
-        schema:
-          $ref: "#/components/schemas/identifier"
-        required: true
+        - name: commentId
+          in: path
+          schema:
+            $ref: "#/components/schemas/identifier"
+          required: true
+        - name: postId
+          in: path
+          schema: 
+            $ref: "#/components/schemas/identifier"
+          required: true
     delete:
       summary: delete your comment on the post
       description: remove a comment object in the comment list of the post
       operationId: uncommentPhoto
       tags: ["comment"]
-
+      
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
@@ -385,13 +389,20 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/:
+  /Users/{userName}:
+    parameters:
+      - name: userName
+        in: path
+        required: true
+        description: The userName of the user to update or find 
+        schema:
+          $ref: "#/components/schemas/User/properties/userName"
     patch:
       summary: change your userName
       description: change your userName, it must be valid
       operationId: setMyUserName
       tags: ["userName"]
-
+      
       requestBody:
         description: String payload for updating the resource
         required: true
@@ -410,33 +421,26 @@ paths:
           $ref: "#/components/responses/ServerError"
     get:
       summary: get a user profile
-      description: |
+      description: | 
         receive a user profile, made of:
         - userName
         - posts
         - followed and following lists
       operationId: getUserProfile
-      parameters:
-        - name: userName
-          in: query
-          description: Name of the user you want to get
-          required: true
-          schema:
-            $ref: "#/components/schemas/User/properties/userName"
       tags: ["profile"]
       responses:
         "200":
           description: Successful retrieval
           content:
             application/json:
-              schema:
+              schema: 
                 $ref: "#/components/schemas/User"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
-          $ref: "#/components/responses/ServerError"
+          $ref: "#/components/responses/ServerError"       
   /Users/me/myStream/:
     get:
       summary: watch your friends' photos
@@ -444,7 +448,7 @@ paths:
         receive a stream of posts, picked only from people
         you follow in anti-chronological order
       operationId: getMyStream
-      tags: ["feed"]
+      tags: ["feed", "stream", "forYou", "fyp"]
       responses:
         "200":
           description: feed successfully sent
@@ -453,7 +457,8 @@ paths:
               schema:
                 description: array of postIds to fetch after
                 type: array
-                items: { $ref: "#/components/schemas/Post/properties/id" }
+                items:
+                  {$ref: "#/components/schemas/Post/properties/id"}
                 minItems: 0
                 maxItems: 20
         "403":
@@ -461,7 +466,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
-          $ref: "#/components/responses/ServerError"
+          $ref: "#/components/responses/ServerError"  
   /Images/:
     post:
       summary: create a new post
@@ -489,12 +494,12 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Images/{postId}:
     parameters:
-      - in: path
-        name: postId
-        required: true
-        description: Id of photo you want to get/delete
-        schema:
-          $ref: "#/components/schemas/identifier"
+        - in: path
+          name: postId
+          required: true
+          description: Id of photo you want to get/delete
+          schema:
+            $ref: "#/components/schemas/identifier"
     delete:
       summary: delete one of your posts
       description: |
@@ -506,7 +511,7 @@ paths:
         "200":
           $ref: "#/components/responses/OkDone"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: '#/components/responses/UnauthorizedError'
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -536,12 +541,12 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Images/{postId}/metadata:
     parameters:
-      - in: path
-        name: postId
-        required: true
-        description: Id of photo metadata you want to get
-        schema:
-          $ref: "#/components/schemas/identifier"
+        - in: path
+          name: postId
+          required: true
+          description: Id of photo metadata you want to get
+          schema:
+            $ref: "#/components/schemas/identifier"
     get:
       summary: get a post metadata (creator, date)
       description: aquire a post given its id
@@ -558,7 +563,7 @@ paths:
                   creator:
                     $ref: "#/components/schemas/Post/properties/creator"
                   date:
-                    $ref: "#/components/schemas/Post/properties/date"
+                    $ref: "#/components/schemas/Post/properties/date"              
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -566,11 +571,12 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
   /Users/me/following/:
+    
     post:
-      summary: follow a user
+      summary: follow a user 
       description: |
         insert a user in your list of people you follow,
-        you will see Their posts
+        you will see Their posts 
       operationId: followUser
       tags: ["followers", "user"]
       requestBody:
@@ -578,7 +584,7 @@ paths:
         required: true
         content:
           application/json:
-            schema:
+            schema: 
               $ref: "#/components/schemas/User/properties/userId"
       responses:
         "201":
@@ -598,7 +604,7 @@ paths:
         schema:
           $ref: "#/components/schemas/identifier"
     delete:
-      summary: unfollow a user
+      summary: unfollow a user 
       description: |
         delete a user in your follow list,
         you won't see their posts again
@@ -615,10 +621,10 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Users/me/muted/:
     post:
-      summary: ban a user
+      summary: ban a user 
       description: |
         insert a user in your list of banned people,
-        they won't see your posts
+        they won't see your posts 
       operationId: banUser
       tags: ["muted", "user"]
       requestBody:
@@ -646,7 +652,7 @@ paths:
         schema:
           $ref: "#/components/schemas/identifier"
     delete:
-      summary: unban a banned user
+      summary: unban a banned user 
       description: |
         delete a user in your banlist,
         they will see your posts again

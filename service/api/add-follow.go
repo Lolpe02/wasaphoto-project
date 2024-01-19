@@ -15,7 +15,7 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	err := json.NewDecoder(r.Body).Decode(&IdtoFollow)
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) // 400
+		w.WriteHeader(http.StatusBadRequest) //400
 		return
 	}
 

@@ -15,7 +15,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	err := json.NewDecoder(r.Body).Decode(&IdtoBan)
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) // 400
+		w.WriteHeader(http.StatusBadRequest) //400
 		return
 	}
 
@@ -23,7 +23,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) // 401
+		w.WriteHeader(http.StatusUnauthorized) //401
 		return
 	}
 
