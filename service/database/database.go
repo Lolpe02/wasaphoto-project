@@ -472,12 +472,12 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	case ban:
 		return errors.New("already banned this user")
 	default:
-		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
+		_, err = db.c.Exec("INSERT OR IGNORE INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
 	}
 	if err != nil {
 		return err
 	}
-	_, err = db.c.Exec("DELETE FROM follows (following, followed) WHERE followed = ? AND following = ?", yourId, theirId)
+	_, err = db.c.Exec("DELETE OR IGNORE FROM follows (following, followed) WHERE followed = ? AND following = ?", yourId, theirId)
 
 	if err != nil {
 		return err
@@ -485,7 +485,7 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	return
 }
 func (db *appdbimpl) UnbanUser(yourId int64, theirId int64) (err error) {
-	_, err = db.c.Exec("DELETE FROM bans WHERE banning = ? AND banned = ?)", yourId, theirId)
+	_, err = db.c.Exec("DELETE OR IGNORE FROM bans WHERE banning = ? AND banned = ?)", yourId, theirId)
 	if err != nil {
 		return err
 	}

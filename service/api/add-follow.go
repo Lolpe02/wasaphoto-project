@@ -26,16 +26,41 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
+
+	// check if user exists
+	_, _, err = rt.db.SearchById(IdtoFollow)
+	if err != nil {
+		if err.Error() == "user not found" {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusNotFound) // 404
+		} else {
+			// could not follow, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
+		return
+	}
+
 	follow := follow{yourId, IdtoFollow}
 	var exists bool
 	exists, err = rt.db.FollowUser(follow.FollowingId, follow.FollowedId)
 	if err != nil {
-		// could not follow, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("could not follow user " + err.Error())
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) // 500
+		if isForeignKeyViolation(err) {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusNotFound) // 404
+			err = json.NewEncoder(w).Encode("could not follow user, it doesnt exists " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+				return
+			}
 			return
+		} else {
+			// could not follow, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) // 500
+			err = json.NewEncoder(w).Encode("could not follow user " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+				return
+			}
 		}
 		return
 	}
@@ -45,17 +70,16 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	case true:
 		w.WriteHeader(http.StatusOK) // 200
 		err = json.NewEncoder(w).Encode("user already followed")
-	case false:
+	default:
 		w.WriteHeader(http.StatusCreated) // 201
 		err = json.NewEncoder(w).Encode("now following user")
 	}
 	if err != nil {
 		// could not write response, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 00
-		err =  json.NewEncoder(w).Encode("could not write response " + err.Error())
+		err = json.NewEncoder(w).Encode("could not write response " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
-			return
 		}
 		return
 	}

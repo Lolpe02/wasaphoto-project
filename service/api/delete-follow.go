@@ -24,6 +24,7 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	var yourId int64
+	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
@@ -50,7 +51,7 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 			return
 		}
 	}
-	err = json.NewEncoder(w).Encode("Unfollowed\n")
+	err = json.NewEncoder(w).Encode("Unfollowed")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return

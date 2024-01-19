@@ -52,3 +52,24 @@ func isValid(name string) bool {
 	}
 	return valid && 3 <= len(name) && len(name) <= 20
 }
+
+// Function to check if the error is a foreign key violation
+func isForeignKeyViolation(err error) bool {
+	// SQLite error codes for foreign key violations
+	sqliteForeignKeyErrorCodes := []string{
+		"foreign key constraint failed",
+		"constraint failed",
+		"violated constraint",
+		"conflicted with FOREIGN KEY constraint",
+		"violates foreign key",
+		"duplicate key value violates constraint",
+	}
+
+	// Check if the error message contains any of the known SQLite foreign key violation messages
+	for _, code := range sqliteForeignKeyErrorCodes {
+		if strings.Contains(err.Error(), code) {
+			return true
+		}
+	}
+	return false
+}

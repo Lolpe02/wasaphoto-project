@@ -26,15 +26,36 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
-	ban := ban{IdtoBan, yourId}
-	err = rt.db.BanUser(ban.BannerId, ban.BannedId)
+
+	// check if user exists
+	_, _, err = rt.db.SearchById(IdtoBan)
 	if err != nil {
-		// could not follow, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
+		if err.Error() == "user not found" {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusNotFound) // 404
+		} else {
+			// could not follow, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
 		return
 	}
 
+	ban := ban{yourId, IdtoBan}
+	err = rt.db.BanUser(ban.BannerId, ban.BannedId)
+	if err != nil {
+		if err.Error() == "already banned this user" {
+			w.WriteHeader(http.StatusOK) // 200
+			err = json.NewEncoder(w).Encode(err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+			}
+		} else {
+			// could not follow, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
+		return
+	}
 	// return the list of post ids of that user
-	w.WriteHeader(http.StatusCreated) // 200
+	w.WriteHeader(http.StatusCreated) // 201
 
 }

@@ -10,7 +10,7 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("Content-Type", "application/json")
 
 	// take id parameters from the path (person to follow)
-	IdtoFollow, err := readPath(ps, "banedId")
+	IdtoUnban, err := readPath(ps, "bannedId")
 	if err != nil {
 		// could not parse the id, throw bad request
 		w.WriteHeader(http.StatusBadRequest) // 400
@@ -24,7 +24,8 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
-	err = rt.db.UnbanUser(yourId, IdtoFollow)
+
+	err = rt.db.UnbanUser(yourId, IdtoUnban)
 	if err != nil {
 		// could not follow, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
@@ -32,5 +33,5 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	// return the list of post ids of that user
-	w.WriteHeader(http.StatusCreated) // 200
+	w.WriteHeader(http.StatusOK) // 200
 }

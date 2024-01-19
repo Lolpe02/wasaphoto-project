@@ -572,7 +572,7 @@ paths:
         insert a user in your list of people you follow,
         you will see Their posts
       operationId: followUser
-      tags: ["follow", "user"]
+      tags: ["followers", "user"]
       requestBody:
         description: the person you want to follow
         required: true
@@ -603,7 +603,7 @@ paths:
         delete a user in your follow list,
         you won't see their posts again
       operationId: unfollowUser
-      tags: ["follow", "unfollow", "user"]
+      tags: ["followers", "user"]
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
@@ -621,6 +621,13 @@ paths:
         they won't see your posts
       operationId: banUser
       tags: ["muted", "user"]
+      requestBody:
+        description: the person you want to ban
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User/properties/userId"
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
@@ -644,7 +651,7 @@ paths:
         delete a user in your banlist,
         they will see your posts again
       operationId: unbanUser
-      tags: ["muted", "unmute", "user"]
+      tags: ["muted", "user"]
       responses:
         "200":
           $ref: "#/components/responses/OkDone"

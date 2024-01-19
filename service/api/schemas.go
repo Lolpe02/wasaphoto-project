@@ -29,6 +29,6 @@ type follow struct {
 	FollowedId  int64 `json:"followedId"`
 }
 type ban struct {
-	BannedId int64 `json:"bannedId"`
 	BannerId int64 `json:"bannerId"`
+	BannedId int64 `json:"bannedId"`
 }
