@@ -30,7 +30,7 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	// check if user exists
 	_, _, err = rt.db.SearchById(IdtoFollow)
 	if err != nil {
-		if err.Error() == "user not found" {
+		if err.Error() == "not found" {
 			// could not follow, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 		} else {

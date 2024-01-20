@@ -26,7 +26,7 @@ components:
       required:
         - "photo"
         - "time"
-        - "id"
+        - "postId"
       properties:
         photo:
           description: your image
@@ -34,7 +34,7 @@ components:
           format: binary
           minLength: 1
           maxLength: 9999999999999999999
-        id:
+        postId:
           $ref: "#/components/schemas/identifier"
         creator:
           $ref: "#/components/schemas/identifier"
@@ -122,7 +122,7 @@ components:
           description: list of user's post
           type: array
           items: 
-            $ref: "#/components/schemas/Post/properties/id"
+            $ref: "#/components/schemas/Post/properties/postId"
           minItems: 0
           maxItems: 10000
           readOnly: true
@@ -389,14 +389,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Users/{userName}:
-    parameters:
-      - name: userName
-        in: path
-        required: true
-        description: The userName of the user to update or find 
-        schema:
-          $ref: "#/components/schemas/User/properties/userName"
+  /Users/:
+
     patch:
       summary: change your userName
       description: change your userName, it must be valid
@@ -428,6 +422,13 @@ paths:
         - followed and following lists
       operationId: getUserProfile
       tags: ["profile"]
+      parameters:
+      - name: userName
+        in: query
+        required: true
+        description: The userName of the user to update or find 
+        schema:
+          $ref: "#/components/schemas/User/properties/userName"
       responses:
         "200":
           description: Successful retrieval
@@ -448,7 +449,7 @@ paths:
         receive a stream of posts, picked only from people
         you follow in anti-chronological order
       operationId: getMyStream
-      tags: ["feed", "stream", "forYou", "fyp"]
+      tags: ["feed"]
       responses:
         "200":
           description: feed successfully sent
@@ -458,9 +459,9 @@ paths:
                 description: array of postIds to fetch after
                 type: array
                 items:
-                  {$ref: "#/components/schemas/Post/properties/id"}
+                  {$ref: "#/components/schemas/Post/properties/postId"}
                 minItems: 0
-                maxItems: 20
+                maxItems: 50
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -474,17 +475,18 @@ paths:
         add an image to your profile, to be displayed
         in anti-chronological order
       operationId: uploadPhoto
-      tags: ["post", "upload", "create"]
+      tags: ["post"]
       requestBody:
         required: true
         description: upload your photo file
         content:
-          image:
+          image/*:
             schema:
               $ref: "#/components/schemas/Post/properties/photo"
             encoding:
               photo:
-                contentType: image/png, image/jpeg
+                contentType: image/png, image/jpeg, image/gif
+  
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
@@ -506,7 +508,7 @@ paths:
         delete a post from your profile, 
         given its id
       operationId: deletePhoto
-      tags: ["photo", "post"]
+      tags: ["post"]
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
@@ -522,17 +524,17 @@ paths:
       summary: get a post
       description: aquire a post given its id
       operationId: getPhoto
-      tags: ["photo", "post"]
+      tags: ["post"]
       responses:
         "200":
           description: requested post object
           content:
-            image:
+            image/*:
               schema:
                 $ref: "#/components/schemas/Post/properties/photo"
               encoding:
                 photo:
-                  contentType: image/png, image/jpeg
+                  contentType: image/png, image/jpeg, image/gif
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -551,7 +553,7 @@ paths:
       summary: get a post metadata (creator, date)
       description: aquire a post given its id
       operationId: getPhotoMetadata
-      tags: ["photo", "post"]
+      tags: ["post"]
       responses:
         "200":
           description: requested post info
@@ -571,7 +573,6 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
   /Users/me/following/:
-    
     post:
       summary: follow a user 
       description: |

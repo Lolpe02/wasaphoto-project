@@ -55,5 +55,4 @@ func (rt *_router) unfollow(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	w.WriteHeader(http.StatusOK) //200
 }

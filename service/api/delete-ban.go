@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -29,9 +30,12 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	if err != nil {
 		// could not follow, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) //500
+		err = json.NewEncoder(w).Encode("could not unban, " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+			return
+		}
 		return
 	}
-
-	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) // 200
 }

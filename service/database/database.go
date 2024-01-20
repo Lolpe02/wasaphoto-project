@@ -166,7 +166,7 @@ func (db *appdbimpl) CreateUser(username string) (yourUserID int64, alreadyExist
 	return
 }
 func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err error) {
-	res, err := db.c.Exec("UPDATE users SET userName = ? WHERE username != ? AND userId = ?", newUsername, yourUserID, yourUserID)
+	res, err := db.c.Exec("UPDATE users SET userName = ? WHERE userName != ? AND userId = ?", newUsername, yourUserID, yourUserID)
 	if err != nil {
 		// could not update the user, throw internal server error
 		return err
@@ -179,18 +179,18 @@ func (db *appdbimpl) ChangeUsername(yourUserID int64, newUsername string) (err e
 	}
 	if rows == 0 {
 		// the user was not updated, throw bad request
-		return errors.New("user not found")
+		return errors.New("not found")
 	}
 	return nil
 }
 func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err error) {
-	err = db.c.QueryRow("SELECT user_id FROM users WHERE username = ?;", targetUser).Scan(&selUserId)
+	err = db.c.QueryRow("SELECT userId FROM users WHERE userName = ?;", targetUser).Scan(&selUserId)
 
 	// Handling sql.ErrNoRows
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Return nil values and specify the error
-			return -1, errors.New("user not found")
+			return -1, errors.New("not found")
 		}
 		// Return other errors as is
 		return -1, err
@@ -200,13 +200,13 @@ func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err e
 	return
 }
 func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscription string, err error) {
-	err = db.c.QueryRow("SELECT user_id, user_date FROM users WHERE username = ?;", targetUserId).Scan(&selUserName, &subscription)
+	err = db.c.QueryRow("SELECT userName, date FROM users WHERE userId = ?;", targetUserId).Scan(&selUserName, &subscription)
 
-	// Handling sql.ErrNoRows
 	if err != nil {
+		// Handling sql.ErrNoRows
 		if err == sql.ErrNoRows {
 			// Return nil values and specify the error
-			return "", "", errors.New("user not found")
+			return "", "", errors.New("not found")
 		}
 		// Return other errors as is
 		return "", "", err
@@ -278,14 +278,22 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	return
 }
 func (db *appdbimpl) PutLike(targetPost int64, creator int64) (err error) {
-	_, err = db.c.Exec("INSERT INTO likes (userId, postId) VALUES (?, ?)", creator, targetPost)
+	var res sql.Result
+	res, err = db.c.Exec("INSERT OR IGNORE INTO likes (userId, postId) VALUES (?, ?)", creator, targetPost)
 	if err != nil {
 		return err
+	}
+	var changed int64
+	if changed, err = res.RowsAffected(); changed == 0 {
+		if err != nil {
+			return err
+		}
+		return errors.New("already liked")
 	}
 	return
 }
 func (db *appdbimpl) Unlike(targetPost int64, creator int64) (err error) {
-	_, err = db.c.Exec("DELETE FROM likes (userId = ? postId = ?", creator, targetPost)
+	_, err = db.c.Exec("DELETE FROM likes WHERE userId = ? AND postId = ?", creator, targetPost)
 	if err != nil {
 		return
 	}
@@ -330,9 +338,17 @@ func (db *appdbimpl) PutComment(creator int64, content string, post int64) (newC
 	return
 }
 func (db *appdbimpl) Uncomment(creator int64, commentId int64) (err error) {
-	_, err = db.c.Exec("DELETE FROM comments WHERE userId = ? commentId = ?", creator, commentId)
+	var res sql.Result
+	res, err = db.c.Exec("DELETE FROM comments WHERE userId = ? AND commentId = ?", creator, commentId)
 	if err != nil {
 		return err
+	}
+	var changed int64
+	if changed, err = res.RowsAffected(); changed == 0 {
+		if err != nil {
+			return err
+		}
+		return errors.New("not found")
 	}
 	return
 }
@@ -349,19 +365,18 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 	}
 	defer rows.Close()
 
-	var idList []int64
 	// Iterate through the rows retrieved
 	for rows.Next() {
 		var commentId int64
 
 		// Scan the Id values from each row into variables
 
-		if rowerr := rows.Scan(&commentId); rowerr != nil {
+		if err = rows.Scan(&commentId); err != nil {
 			return
 		}
 
 		// Append the retrieved Id to the list
-		idList = append(idList, commentId)
+		commentIds = append(commentIds, commentId)
 	}
 
 	// Check for errors encountered during iteration
@@ -369,39 +384,52 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 	if err != nil {
 		return
 	}
-
-	// Print or use the retrieved Id list
-	return idList, err
+	return
 }
 func (db *appdbimpl) GetComment(commentId int64) (creator int64, content string, date string, err error) {
-	err = db.c.QueryRow("SELECT (userId, comment, date) FROM comments WHERE commentId = ?;", commentId).Scan(&creator, &content, &date)
+	err = db.c.QueryRow("SELECT userId, comment, date FROM comments WHERE commentId = ?;", commentId).Scan(&creator, &content, &date)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS countres
+		if err == sql.ErrNoRows {
+			// Return nil values and specify the error
+			return -1, "", "", errors.New("not found")
+		}
 		return -1, "", "", err
 	}
 	return
 }
 func (db *appdbimpl) CreatePost(image []byte, creator int64) (postId int64, err error) {
 	// Insert the image into the database
-	result, err := db.c.Exec("INSERT INTO images(userId, image) VALUES(?, ?)", creator, image)
+	result, err := db.c.Exec("INSERT INTO images (userId, image) VALUES (?, ?)", creator, image)
 	if err != nil {
 		return -1, err
 	}
 
 	// Get the ID of the inserted image
-	imageID, _ := result.LastInsertId()
-
-	return imageID, err
+	postId, err = result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+	return
 }
 func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
-	_, err = db.c.Exec("DELETE FROM images WHERE userId = ? postId = ?", creator, postId)
+	var res sql.Result
+	res, err = db.c.Exec("DELETE FROM images WHERE userId = ? AND postId = ?", creator, postId)
 	if err != nil {
 		return err
 	}
+	var changed int64
+	if changed, err = res.RowsAffected(); changed == 0 {
+		if err != nil {
+			return err
+		}
+		return errors.New("not found")
+	}
+	// delete likes and comments
 	_, err = db.c.Exec("DELETE FROM likes WHERE postId = ?", postId)
 	if err != nil {
 		return err
 	}
-	_, err = db.c.Exec("DELETE FROM images WHERE postId = ?", postId)
+	_, err = db.c.Exec("DELETE FROM comments WHERE postId = ?", postId)
 	if err != nil {
 		return err
 	}
@@ -409,8 +437,12 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 }
 func (db *appdbimpl) GetPost(postId int64) (retrievedImage []byte, userId int64, date string, err error) {
 	// Retrieve the image from the database
-	err = db.c.QueryRow("SELECT (userId, image, time) FROM images WHERE postId = ?", postId).Scan(&userId, &retrievedImage, &date)
+	err = db.c.QueryRow("SELECT userId, image, time FROM images WHERE postId = ?", postId).Scan(&userId, &retrievedImage, &date)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// Return nil values and specify the error
+			return nil, -1, "", errors.New("not found")
+		}
 		return nil, -1, "", err
 	}
 	// Write the retrieved image data to a new file
@@ -419,9 +451,17 @@ func (db *appdbimpl) GetPost(postId int64) (retrievedImage []byte, userId int64,
 	//  fmt.Println("Error writing retrieved image file:", err)
 	// 	return
 	// }
-	return retrievedImage, userId, "", nil
+	return
 }
 func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error) {
+	// check if user exists
+	_, _, err = db.SearchById(theirId)
+	if err != nil {
+		if err.Error() == "not found" {
+			return false, err
+		}
+		return false, err
+	}
 	var banned bool
 	_, banned, err = db.GetBanneds(theirId, yourId)
 	if err != nil {
@@ -442,7 +482,8 @@ func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (alreadyExists bool
 		if err != nil {
 			return true, err
 		}
-		return true, nil
+		alreadyExists = true
+		return
 	}
 	alreadyExists = false
 	return
@@ -472,12 +513,12 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	case ban:
 		return errors.New("already banned this user")
 	default:
-		_, err = db.c.Exec("INSERT OR IGNORE INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
+		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
 	}
 	if err != nil {
 		return err
 	}
-	_, err = db.c.Exec("DELETE OR IGNORE FROM follows (following, followed) WHERE followed = ? AND following = ?", yourId, theirId)
+	_, err = db.c.Exec("DELETE FROM follows WHERE followed = ? AND following = ?", yourId, theirId)
 
 	if err != nil {
 		return err
@@ -485,16 +526,16 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	return
 }
 func (db *appdbimpl) UnbanUser(yourId int64, theirId int64) (err error) {
-	_, err = db.c.Exec("DELETE OR IGNORE FROM bans WHERE banning = ? AND banned = ?)", yourId, theirId)
+	_, err = db.c.Exec("DELETE FROM bans WHERE banning = ? AND banned = ?;", yourId, theirId)
 	if err != nil {
 		return err
 	}
-	return nil
+	return
 }
 func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []int64, present bool, err error) {
 	var rows *sql.Rows
 	present = false
-	rows, err = db.c.Query("SELECT banned FROM bans WHERE banning = ? ", targetUserId)
+	rows, err = db.c.Query("SELECT banned FROM bans WHERE banning = ?;", targetUserId)
 
 	if err != nil {
 

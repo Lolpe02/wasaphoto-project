@@ -160,7 +160,7 @@ paths:
             schema:
               type: object
               properties:
-                userid:
+                userId:
                   type: string
                   pattern: '^[a-zA-Z0-9]+$'
                   minLength: 3
