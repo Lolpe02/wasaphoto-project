@@ -407,7 +407,7 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
-        "403":
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFound"

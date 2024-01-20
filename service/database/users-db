@@ -24,7 +24,7 @@ func (db *appdbimpl) SearchByID(targetUser User) (selectedUser User, present boo
 	err := db.c.QueryRow("SELECT * FROM users WHERE UserID = ?;", targetUser.ID).Scan(&selectedUser.ID, &selectedUser.Name)
 
 	// if the query selects no rows
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		present = false
 		return
 	}

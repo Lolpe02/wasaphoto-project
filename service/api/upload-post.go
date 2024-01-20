@@ -18,10 +18,35 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	var newImage []byte
+	// method 1
+	newImage := make([]byte, r.ContentLength) // create a byte array of the size of the image
+	_, err = r.Body.Read(newImage)
+	if err != nil {
+		// could not read file, bad request
+		w.WriteHeader(http.StatusBadRequest) //400
+		err = json.NewEncoder(w).Encode("cant read file " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) //500
+		}
+		return
+	}
+	format1 := http.DetectContentType(newImage)
 	// read binary string from body
+	// method 2
+	file, _, err1 := r.FormFile("image")
+	if err1 != nil {
+		// could not read file, bad request
+		w.WriteHeader(http.StatusBadRequest) //400
+		err = json.NewEncoder(w).Encode("cant read file " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) //500
+		}
+		return
+	}
+	// turn file into byte array
+	_, err = file.Read(newImage)
+	format2 := http.DetectContentType(newImage)
 
-	err = json.NewDecoder(r.Body).Decode(&newImage)
 	if err != nil {
 		// could not decode post, bad request
 		w.WriteHeader(http.StatusBadRequest) //400
@@ -46,4 +71,5 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// return the id of the post?? idk
 	w.WriteHeader(http.StatusCreated) //201
+	err = json.NewEncoder(w).Encode(format1 + " " + format2)
 }
