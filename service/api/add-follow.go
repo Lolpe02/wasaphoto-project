@@ -15,7 +15,7 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	err := json.NewDecoder(r.Body).Decode(&IdtoFollow)
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 
@@ -76,7 +76,7 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 	if err != nil {
 		// could not write response, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 00
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		err = json.NewEncoder(w).Encode("could not write response " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500

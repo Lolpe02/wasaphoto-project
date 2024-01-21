@@ -14,7 +14,7 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	IdtoUnban, err := readPath(ps, "bannedId")
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 
@@ -22,14 +22,14 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) //401
+		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 
 	err = rt.db.UnbanUser(yourId, IdtoUnban)
 	if err != nil {
 		// could not follow, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		err = json.NewEncoder(w).Encode("could not unban, " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500

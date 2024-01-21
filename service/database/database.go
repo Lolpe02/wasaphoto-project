@@ -34,6 +34,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"image"
+
 	"github.com/gofrs/uuid"
 	// "github.com/mattn/go-sqlite3"
 	// "strings"
@@ -54,7 +56,7 @@ type AppDatabase interface {
 	Uncomment(creator int64, commentId int64) (err error)
 	GetCommentList(targetPost int64, specificUser int64) (commentIds []int64, err error)
 	GetComment(commentId int64) (creator int64, content string, date string, err error)
-	CreatePost(image []byte, creator int64) (postId int64, err error)
+	CreatePost(image image.Image, creator int64) (postId int64, err error)
 	Unpost(creator int64, postId int64) (err error)
 	GetPost(postId int64) (retrievedImage []byte, userId int64, date string, err error)
 	FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error)
@@ -81,12 +83,24 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
+	var PRAGMAactive bool
+	err7 := db.QueryRow("PRAGMA foreign_keys = ON;").Scan(&PRAGMAactive)
+	if errors.Is(err7, sql.ErrNoRows) {
+		// do nothing
+		// return nil, fmt.Errorf("error activating foreign keys: %w", err7)
+	} else if err7 != nil {
+		return nil, fmt.Errorf("error not activating foreign keys: %w", err7)
+	}
+
 	// Check if table exists. If not, the database is empty, and we need to create the structure
 
 	var users string
 	err1 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&users)
 	if errors.Is(err1, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE users (userId INTEGER PRIMARY KEY, userName TEXT UNIQUE NOT NULL, date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);`
+		sqlStmt := `CREATE TABLE users (
+			 userId INTEGER PRIMARY KEY,
+			 userName TEXT UNIQUE NOT NULL, 
+			 date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);`
 		_, err1 = db.Exec(sqlStmt)
 		if err1 != nil {
 			return nil, fmt.Errorf("error creating database structure table users: %w", err1)
@@ -95,7 +109,11 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var images string
 	err2 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='images';`).Scan(&images)
 	if errors.Is(err2, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE images (postId INTEGER PRIMARY KEY, userId INTEGER NOT NULL, time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (userId) REFERENCES users(userId));`
+		sqlStmt := `CREATE TABLE images (
+			 postId INTEGER PRIMARY KEY,
+			 userId INTEGER NOT NULL, 
+			 time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			 FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE);`
 		_, err2 = db.Exec(sqlStmt)
 		if err2 != nil {
 			return nil, fmt.Errorf("error creating database structure table images: %w", err2)
@@ -104,7 +122,12 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var likes string
 	err3 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='likes';`).Scan(&likes)
 	if errors.Is(err3, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE likes (userId INTEGER NOT NULL, postId INTEGER NOT NULL, PRIMARY KEY (userId, postId), FOREIGN KEY (userId) REFERENCES users(userId), FOREIGN KEY (postId) REFERENCES images(postId));`
+		sqlStmt := `CREATE TABLE likes (
+			 userId INTEGER NOT NULL,
+			 postId INTEGER NOT NULL,
+			 PRIMARY KEY (userId, postId),
+			 FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
+			 FOREIGN KEY (postId) REFERENCES images(postId) ON DELETE CASCADE ON UPDATE CASCADE);`
 		_, err3 = db.Exec(sqlStmt)
 		if err3 != nil {
 			return nil, fmt.Errorf("error creating database structure table likes: %w", err3)
@@ -114,7 +137,14 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var comments string
 	err4 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='comments';`).Scan(&comments)
 	if errors.Is(err4, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE comments (commentId INTEGER PRIMARY KEY, userId INTEGER NOT NULL, postId INTEGER NOT NULL, comment TEXT NOT NULL, date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (userId) REFERENCES users(userId), FOREIGN KEY (postId) REFERENCES images(postId));`
+		sqlStmt := `CREATE TABLE comments (
+			 commentId INTEGER PRIMARY KEY,
+			 userId INTEGER NOT NULL,
+			 postId INTEGER NOT NULL,
+			 comment TEXT NOT NULL,
+			 date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			 FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
+			 FOREIGN KEY (postId) REFERENCES images(postId) ON DELETE CASCADE ON UPDATE CASCADE);`
 		_, err4 = db.Exec(sqlStmt)
 		if err4 != nil {
 			return nil, fmt.Errorf("error creating database structure table comments: %w", err4)
@@ -123,7 +153,13 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var bans string
 	err5 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='bans';`).Scan(&bans)
 	if errors.Is(err5, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE bans (banning INTEGER NOT NULL, banned INTEGER NOT NULL, PRIMARY KEY (banning, banned), FOREIGN KEY (banning) REFERENCES users(userId), FOREIGN KEY (banned) REFERENCES users(userId), CHECK (banning != banned));`
+		sqlStmt := `CREATE TABLE bans (
+			 banning INTEGER NOT NULL,
+			 banned INTEGER NOT NULL,
+			 PRIMARY KEY (banning, banned), 
+			 FOREIGN KEY (banning) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE, 
+			 FOREIGN KEY (banned) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE, 
+			 CHECK (banning != banned));`
 		_, err5 = db.Exec(sqlStmt)
 		if err5 != nil {
 			return nil, fmt.Errorf("error creating database structure table bans: %w", err5)
@@ -132,18 +168,17 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var follows string
 	err6 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='follows';`).Scan(&follows)
 	if errors.Is(err6, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE follows (following INTEGER NOT NULL, followed INTEGER NOT NULL, PRIMARY KEY (following, followed), FOREIGN KEY (following) REFERENCES users(userId), FOREIGN KEY (followed) REFERENCES users(userId), CHECK (following != followed));`
+		sqlStmt := `CREATE TABLE follows (
+			 following INTEGER NOT NULL,
+			 followed INTEGER NOT NULL,
+			 PRIMARY KEY (following, followed),
+			 FOREIGN KEY (following) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
+			 FOREIGN KEY (followed) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE,
+			 CHECK (following != followed));`
 		_, err6 = db.Exec(sqlStmt)
 		if err6 != nil {
 			return nil, fmt.Errorf("error creating database structure table follows: %w", err6)
 		}
-	}
-	var PRAGMAactive bool
-	err7 := db.QueryRow(`PRAGMA foreign_keys = ON;`).Scan(&PRAGMAactive)
-	if errors.Is(err7, sql.ErrNoRows) {
-		// do nothing
-	} else if err7 != nil {
-		return nil, fmt.Errorf("error activating foreign keys: %w", err7)
 	}
 
 	return &appdbimpl{

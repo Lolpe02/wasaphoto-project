@@ -14,7 +14,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	postId, err := readPath(ps, "postId")
 	if err != nil {
 		// could not parse the id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
 
@@ -23,7 +23,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
-		w.WriteHeader(http.StatusUnauthorized) //401
+		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 	// put retrieved post in post object
@@ -31,24 +31,24 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	targetPost, creator, date, err := rt.db.GetPost(postId)
 	if err != nil {
 		// could not get creator, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
 	retrieved := post{targetPost, postId, creator, date}
 	_, present, err1 := rt.db.GetFolloweds(retrieved.Creator, yourId)
 	if err1 != nil {
 		// could not get follows, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
 	if !present {
 		// you are not following this person, throw forbidden
-		w.WriteHeader(http.StatusForbidden) //403
+		w.WriteHeader(http.StatusForbidden) // 403
 		return
 	}
 
 	// return the list of post ids of that user
-	w.WriteHeader(http.StatusOK) //200
+	w.WriteHeader(http.StatusOK) // 200
 	json.NewEncoder(w).Encode(retrieved.Image)
 
 }

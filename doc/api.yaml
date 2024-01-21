@@ -3,9 +3,9 @@ info:
   title: "WasaPhoto"
   version: 1.0.0
   description: api for "WasaPhoto" project
-servers:
-  - url: http://localhost:3000
-    description: Local server
+# servers:
+#  - url: http://localhost:3000
+#    description: Local server
 tags:
   - name: user 
     description: Operations related to users
@@ -19,32 +19,9 @@ components:
       type: integer
       format: int64
       readOnly: true
-    Post:
-      title: Post
-      description: this is the post object, with an image and meta informations
-      type: object
-      required:
-        - "photo"
-        - "time"
-        - "postId"
-      properties:
-        photo:
-          description: your image
-          type: string
-          format: binary
-          minLength: 1
-          maxLength: 9999999999999999999
-        postId:
-          $ref: "#/components/schemas/identifier"
-        creator:
-          $ref: "#/components/schemas/identifier"
-        date:
-          description: when the post was uploaded
-          type: string
-          format: date-time
-          minLength: 6
-          maxLength: 20
-        #\#like:
+      minimum: 0
+      maximum: 9223372036854775807 
+        #\nlike:
           #description: number of likes
           #type: integer
           #default: 0
@@ -55,7 +32,7 @@ components:
           #description: list of likes of the post
           #type: array
           #items: 
-          #  $ref: "#/components/schemas/Like"
+          #  $ref: "#/components/schemas/identifier"
           #minItems: 0
           #maxItems: 9999999999999999999
         #comments:
@@ -65,22 +42,11 @@ components:
           #  $ref: "#/components/schemas/Comment"
           #minItems: 0
           #maxItems: 9999999
-    Like:
-      title: Post upvote
-      description: post upvote
-      type: object
-      properties:
-        creator:
-          $ref: "#/components/schemas/identifier"
-        post:
-          $ref: "#/components/schemas/identifier"
     Comment:
       title: Post comment
       description: post comment
       type: object
       properties:
-        postId:
-          $ref: "#/components/schemas/identifier"
         creator:
           $ref: "#/components/schemas/identifier"
         date:
@@ -122,7 +88,7 @@ components:
           description: list of user's post
           type: array
           items: 
-            $ref: "#/components/schemas/Post/properties/postId"
+            $ref: "#/components/schemas/identifier"
           minItems: 0
           maxItems: 10000
           readOnly: true
@@ -250,7 +216,7 @@ paths:
                 description: array of userlikes
                 type: array
                 items:
-                  {$ref: "#/components/schemas/Like"}
+                  {$ref: "#/components/schemas/identifier"}
                 minItems: 0
                 maxItems: 10000
         "403":
@@ -278,19 +244,15 @@ paths:
       tags: ["like", "post"]
       
       requestBody:
-        description: like object
+        description: postId where to put like 
         required: true
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/Like"
+              $ref: "#/components/schemas/identifier"
       responses:
         "201":
-          description: like created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Like"
+          $ref: "#/components/responses/OkDone"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -332,7 +294,7 @@ paths:
                 description: array of all comments
                 type: array
                 items:
-                  $ref: "#/components/schemas/Comment"
+                  {$ref: "#/components/schemas/Comment"}
                 minItems: 0
                 maxItems: 500000
         "403":
@@ -459,7 +421,7 @@ paths:
                 description: array of postIds to fetch after
                 type: array
                 items:
-                  {$ref: "#/components/schemas/Post/properties/postId"}
+                  {$ref: "#/components/schemas/identifier"}
                 minItems: 0
                 maxItems: 50
         "403":
@@ -480,13 +442,27 @@ paths:
         required: true
         description: upload your photo file
         content:
-          image/*:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Post/properties/photo"
-            encoding:
-              photo:
+              type: object
+              properties: # Request parts
+                photo: 
+                  type: string
+                  format: binary
+                  minLength: 1
+                  maxLength: 32000000
+                description:
+                  type: string
+                  minLength: 0
+                  maxLength: 300
+                  pattern: '(.*?){0,300}$'
+                  example: "Like a boss"
+              required:
+                - photo
+                - description
+            encoding: # The same level as schema
+              photo: # Property name (see above)
                 contentType: image/png, image/jpeg, image/gif
-  
       responses:
         "201":
           $ref: "#/components/responses/OkDone"
@@ -531,7 +507,10 @@ paths:
           content:
             image/*:
               schema:
-                $ref: "#/components/schemas/Post/properties/photo"
+                type: string
+                format: binary
+                minLength: 1
+                maxLength: 32000000
               encoding:
                 photo:
                   contentType: image/png, image/jpeg, image/gif
@@ -563,9 +542,13 @@ paths:
                 type: object
                 properties:
                   creator:
-                    $ref: "#/components/schemas/Post/properties/creator"
+                    $ref: "#/components/schemas/identifier"
                   date:
-                    $ref: "#/components/schemas/Post/properties/date"              
+                    description: when the post was uploaded
+                    type: string
+                    format: date-time
+                    minLength: 6
+                    maxLength: 20 
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":

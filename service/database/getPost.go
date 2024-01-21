@@ -20,7 +20,6 @@ func (db *appdbimpl) GetPost(postId int64) (retrievedImage []byte, userId int64,
 	// Write the retrieved image data to a new file
 	// err = ioutil.WriteFile("retrieved_image.jpg", retrievedImage, os.ModePerm)
 	// if err != nil {
-	//  fmt.Println("Error writing retrieved image file:", err)
 	// 	return
 	// }
 	return

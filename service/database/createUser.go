@@ -10,7 +10,6 @@ import (
 func (db *appdbimpl) CreateUser(username string) (yourUserId int64, alreadyExists bool, err error) {
 	// newUId, error := db.uuidGen.NewV4()
 	// if error != nil {
-	// 	fmt.Println(newUId.String())
 	// }
 
 	// "INSERT INTO users (userName) VALUES (?) RETURNING userId ON CONFLICT (userName) DO SELECT userId FROM users WHERE userName = ?"

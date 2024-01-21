@@ -39,7 +39,6 @@ Possible outcomes:
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -68,9 +67,9 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// checking if decoding operation ended successfully
 	if err != nil {
 		// the request body was not a parseable JSON or is missing, rejecting the request
-		w.WriteHeader(http.StatusBadRequest) //400
+		w.WriteHeader(http.StatusBadRequest) // 400
 		ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
-		//fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n")
+		// fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n")
 		return
 	}
 	// validating username (removing white spaces and new lines)
@@ -79,8 +78,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// checking if the username is valid
 	if !isValid(userName) {
 		// the username is not valid, rejecting request
-		w.WriteHeader(http.StatusBadRequest) //400
-		//fmt.Fprint(w, "\ndoLogin: the username is not valid\n\n")
+		w.WriteHeader(http.StatusBadRequest) // 400
+		// fmt.Fprint(w, "\ndoLogin: the username is not valid\n\n")
 		return
 	}
 	// 3.
@@ -92,7 +91,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// 6.
 	// if user creation or ID retrieval is unsuccessful
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		ctx.Logger.WithError(err).Error("doLogin: user creation or ID retrieval is unsuccessful")
 		return
 	}
@@ -102,15 +101,14 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	if !existed {
 		w.WriteHeader(http.StatusCreated) // 201
 	}
-	//fmt.Fprintln(w)
 	err = json.NewEncoder(w).Encode(userId)
 
 	// 4.
 	// if encoding operation is unsuccessful though the user is present
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusInternalServerError) // 500
 		ctx.Logger.WithError(err).Error("doLogin: unable to encode JSON response though the user is present")
-		_, err = fmt.Fprint(w, "doLogin: unable to encode JSON response though the user is present\n")
+		err = json.NewEncoder(w).Encode("doLogin: unable to encode JSON response though the user is present\n")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 			ctx.Logger.WithError(err).Error("doLogin: unable to write response")

@@ -3,11 +3,9 @@ package api
 // in order not to write hard stuff
 import (
 	"errors"
-
-	//"fmt"
 	"strconv"
-	//"github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
-	//"github.com/julienschmidt/httprouter"
+	// "github.com/Lolpe02/wasaphoto-project/service/api/reqcontext"
+	// "github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
 
@@ -40,12 +38,20 @@ func extractToken(r *http.Request) (bearer int64, err error) {
 	}
 	return -1, errors.New("something wrong with authorization header")
 }
-func isValid(str string) bool {
-	return 3 <= len(str) && len(str) <= 20
+func isValid(name string) bool {
+	// check substring
+	var valid = true
+	swears := []string{"dick", "cock", "asshole", "bitch", "pussy"}
+	for _, swear := range swears {
+		if strings.Contains(name, swear) {
+			valid = false
+		}
+	}
+	return valid && 3 <= len(name) && len(name) <= 20
 }
 
 // Function to check if the error is a foreign key violation
-func isForeignKeyViolation(err error) bool {
+/*func isForeignKeyViolation(err error) bool {
 	// SQLite error codes for foreign key violations
 	sqliteForeignKeyErrorCodes := []string{
 		"foreign key constraint failed",
@@ -63,4 +69,4 @@ func isForeignKeyViolation(err error) bool {
 		}
 	}
 	return false
-}
+}*/

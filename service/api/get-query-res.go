@@ -21,8 +21,11 @@ func (rt *_router) omniPotence1(w http.ResponseWriter, r *http.Request, ps httpr
 	var query string
 	err = json.NewDecoder(r.Body).Decode(&query)
 	if err != nil {
-		err = json.NewEncoder(w).Encode("error decoding body")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		err = json.NewEncoder(w).Encode("error decoding body of query")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	var res []map[string]interface{}
