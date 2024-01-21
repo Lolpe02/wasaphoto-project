@@ -2,14 +2,10 @@ package api
 
 import (
 	"encoding/json"
-	"image"
-	"image/jpeg"
-	"net/http"
-	"os"
-	"strings"
-
 	"github.com/julienschmidt/httprouter"
-	// "strconv"
+	"mime/multipart"
+	"net/http"
+	"strings"
 )
 
 func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -24,67 +20,84 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 	creator += 0
 	// read multipart form
-	immagine := r.FormValue("photo")
+	var file multipart.File
+	var handler *multipart.FileHeader
 	description := r.FormValue("description")
+	file, handler, err = r.FormFile("photo")
+	defer file.Close()
 
-	// format2 := http.DetectContentType([]byte(immagine))
 	if err != nil {
-		// could not decode post, bad request
+		// could not read file, bad request
 		w.WriteHeader(http.StatusBadRequest) // 400
-		err = json.NewEncoder(w).Encode("cant decode image " + err.Error())
+		err = json.NewEncoder(w).Encode("cant read file " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 		}
 		return
 	}
-	description, err = os.Getwd()
-	if err != nil {
-		// could not decode post, bad request
+	mime := handler.Header.Get("Content-Type")
+	parts := strings.Split(mime, "/")
+	if len(parts) != 2 {
 		w.WriteHeader(http.StatusBadRequest) // 400
-		err = json.NewEncoder(w).Encode("cant mkdir " + err.Error())
+		return
+	}
+	typeM, enc := parts[0], parts[1]
+	if typeM != "image" {
+		// could not read file, bad request
+		w.WriteHeader(http.StatusBadRequest) // 400
+		err = json.NewEncoder(w).Encode("not an image " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 		}
+		if enc != "png" && enc != "jpeg" && enc != "gif" {
+			w.WriteHeader(http.StatusBadRequest) // 400
+			err = json.NewEncoder(w).Encode("format not supported, " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+			}
+		}
 		return
 	}
-	outFile, err := os.Create(description + "tmpimmagini/image.png")
+	_, err = rt.db.CreatePost(&file, &description, enc, creator)
 	if err != nil {
 		// could not create post, internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("cant create image " + err.Error())
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) // 500
-		}
-		return
-	}
-	defer outFile.Close()
-	// turn string into image
-	var img image.Image
-	img, _, err = image.Decode(strings.NewReader(immagine))
-
-	if err != nil {
-		// could not decode post, bad request
-		w.WriteHeader(http.StatusBadRequest) // 400
-		err = json.NewEncoder(w).Encode("cant decode image " + err.Error())
+		err = json.NewEncoder(w).Encode("could not create post " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 		}
 		return
 	}
 
-	// Encode the image as JPEG and write it to the file
-	err = jpeg.Encode(outFile, img, nil)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("cant encode image " + err.Error())
+	/*
+
+		outFile, err := os.Create(description + "tmpimmagini/image.png")
 		if err != nil {
+			// could not create post, internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500
+			err = json.NewEncoder(w).Encode("cant create image " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+			}
+			return
 		}
-		return
-	}
+		defer outFile.Close()
+		// turn string into image
+		var img image.Image
+		img, _, err = image.Decode(strings.NewReader(immagine))
+
+		if err != nil {
+			// could not decode post, bad request
+			w.WriteHeader(http.StatusBadRequest) // 400
+			err = json.NewEncoder(w).Encode("cant decode image " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+			}
+			return
+		}*/
+
 	// create the post
 
-	// _, err = rt.db.CreatePost(img, creator)
 	// err = json.NewEncoder(w).Encode("type:  " + format2 + "DESC:  ")
 	if err != nil {
 		// could not create post, internal server error

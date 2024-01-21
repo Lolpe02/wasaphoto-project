@@ -1,16 +1,18 @@
 package database
 
 import (
-	"image"
+	"errors"
+	"io"
+	"mime/multipart"
 	"os"
 	"strconv"
 	// "github.com/mattn/go-sqlite3"
 	// "strings"
 )
 
-func (db *appdbimpl) CreatePost(image image.Image, creator int64) (postId int64, err error) {
+func (db *appdbimpl) CreatePost(image *multipart.File, desc *string, enc string, creator int64) (postId int64, err error) {
 	// Insert the image into the database
-	result, err := db.c.Exec("INSERT INTO images (userId) VALUES (?)", creator)
+	result, err := db.c.Exec("INSERT INTO images (userId, description) VALUES (?, ?);", creator, *desc)
 	if err != nil {
 		return -1, err
 	}
@@ -20,12 +22,16 @@ func (db *appdbimpl) CreatePost(image image.Image, creator int64) (postId int64,
 	if err != nil {
 		return -1, err
 	}
-	// get format of image
-
-	// insert the image in images folder
-	err = os.WriteFile("images/"+strconv.FormatInt(postId, 10)+".jpg", []byte{}, os.ModePerm)
+	var dest *os.File
+	dest, err = os.Create(os.TempDir() + "/" + strconv.FormatInt(postId, 10) + "." + enc)
 	if err != nil {
-		return
+		return -1, err
+	}
+	// insert the image in images folder
+	var bytesWritten int64
+	bytesWritten, err = io.Copy(dest, *image)
+	if err != nil || bytesWritten == 0 {
+		return -1, errors.New("nothing written")
 	}
 
 	return

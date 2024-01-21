@@ -3,14 +3,24 @@ info:
   title: "WasaPhoto"
   version: 1.0.0
   description: api for "WasaPhoto" project
-# servers:
-#  - url: http://localhost:3000
-#    description: Local server
+servers:
+  - url: http://localhost:3000
+    description: Local server
 tags:
   - name: user 
     description: Operations related to users
   - name: post
     description: Operations related to posts
+  - name: login
+    description: Operations related to log-in
+  - name: like
+    description: Operations related to likes
+  - name: comment
+    description: Operations related to comments
+  - name: followers
+    description: Operations related to followers
+  - name: muted
+    description: Operations related to banned users
 components:
   schemas:
     identifier:

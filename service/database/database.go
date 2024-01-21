@@ -34,7 +34,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"image"
+	"mime/multipart"
 
 	"github.com/gofrs/uuid"
 	// "github.com/mattn/go-sqlite3"
@@ -56,7 +56,7 @@ type AppDatabase interface {
 	Uncomment(creator int64, commentId int64) (err error)
 	GetCommentList(targetPost int64, specificUser int64) (commentIds []int64, err error)
 	GetComment(commentId int64) (creator int64, content string, date string, err error)
-	CreatePost(image image.Image, creator int64) (postId int64, err error)
+	CreatePost(image *multipart.File, desc *string, enc string, creator int64) (postId int64, err error)
 	Unpost(creator int64, postId int64) (err error)
 	GetPost(postId int64) (retrievedImage []byte, userId int64, date string, err error)
 	FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error)
@@ -112,6 +112,7 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 		sqlStmt := `CREATE TABLE images (
 			 postId INTEGER PRIMARY KEY,
 			 userId INTEGER NOT NULL, 
+			 description STRING,
 			 time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			 FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE);`
 		_, err2 = db.Exec(sqlStmt)
