@@ -9,7 +9,7 @@ import (
 
 func (db *appdbimpl) PutLike(targetPost int64, creator int64) (err error) {
 	var res sql.Result
-	res, err = db.c.Exec("INSERT OR IGNORE INTO likes (userId, postId) VALUES (?, ?)", creator, targetPost)
+	res, err = db.c.Exec("INSERT OR IGNORE INTO likes (userId, postId) VALUES (?, ?);", creator, targetPost)
 	if err != nil {
 		return err
 	}

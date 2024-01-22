@@ -10,7 +10,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/", rt.getContextReply) // ??
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	rt.router.GET("/Images/:postId/likes/", rt.getLikes)
-	rt.router.POST("/Images/:postId/likes/", rt.like)
+	rt.router.PUT("/Images/:postId/likes/:yourId", rt.like)
 	rt.router.DELETE("/Images/:postId/likes/:yourId", rt.unlike)
 	rt.router.GET("/Images/:postId/comments/", rt.getComments)
 	rt.router.GET("/Images/:postId/metadata/", rt.GetPostMetadata)

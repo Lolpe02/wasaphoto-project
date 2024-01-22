@@ -41,14 +41,15 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	retrieved := post{postId, userId, description, date}
-	_, present, err1 := rt.db.GetFolloweds(retrieved.Creator, yourId)
-	if err1 != nil {
+	retrieved := post{userId, description, date}
+	var present bool
+	if _, present, err = rt.db.GetFolloweds(retrieved.Creator, yourId); err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	if !present {
+
+	if !present && retrieved.Creator != yourId {
 		// you are not following this person, throw forbidden
 		w.WriteHeader(http.StatusForbidden) // 403
 		return
@@ -56,6 +57,9 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) // 200
-	json.NewEncoder(w).Encode(retrieved)
+	err = json.NewEncoder(w).Encode(retrieved)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // 500
+	}
 
 }

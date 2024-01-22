@@ -26,9 +26,11 @@ func (db *appdbimpl) GetPost(postId int64) (imagepointer *os.File, imageBytes *[
 	if err != nil {
 		return nil, nil, err
 	}
-	*imageBytes, err = os.ReadFile(path + "." + strings.Split(names[0], ".")[1])
+	var imageBytesOb []byte
+	imageBytesOb, err = os.ReadFile(path + "." + strings.Split(names[0], ".")[1])
 	if err != nil {
 		return nil, nil, err
 	}
+	imageBytes = &imageBytesOb
 	return
 }

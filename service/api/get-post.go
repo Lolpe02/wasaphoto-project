@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"os"
+	// "os"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -48,15 +48,19 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	if !present {
+	if !present && creator != yourId {
 		// you are not following this person, throw forbidden
 		w.WriteHeader(http.StatusForbidden) // 403
+		err = json.NewEncoder(w).Encode("you are not following this person or its not your post")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
 		return
 	}
 	// put retrieved post in post object
-	var pointer *os.File
+	// var pointer *os.File
 	var imageBytes *[]byte
-	pointer, imageBytes, err = rt.db.GetPost(postId)
+	_, imageBytes, err = rt.db.GetPost(postId)
 	if err != nil {
 		if err.Error() == "not found" {
 			// post not found, throw not found
@@ -67,9 +71,26 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	http.
-
-		// return the list of post ids of that user
-		w.WriteHeader(http.StatusOK) // 200
+	if imageBytes == nil {
+		// image not found, throw not found
+		w.WriteHeader(http.StatusNotFound) // 404
+		err = json.NewEncoder(w).Encode("nil pointer")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
+		return
+	}
+	_, err = w.Write(*imageBytes)
+	if err != nil {
+		// could not write image, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		err = json.NewEncoder(w).Encode("couldnt encode image, " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
+		return
+	}
+	// return the list of post ids of that user
+	w.WriteHeader(http.StatusOK) // 200
 
 }

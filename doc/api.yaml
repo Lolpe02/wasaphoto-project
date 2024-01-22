@@ -252,15 +252,9 @@ paths:
       description: insert a like object in the like list of the post
       operationId: likePhoto
       tags: ["like", "post"]
-      
-      requestBody:
-        description: postId where to put like 
-        required: true
-        content:
-          application/json:
-            schema: 
-              $ref: "#/components/schemas/identifier"
       responses:
+        "200":
+          $ref: "#/components/responses/OkDone"
         "201":
           $ref: "#/components/responses/OkDone"
         "403":
@@ -513,7 +507,7 @@ paths:
       tags: ["post"]
       responses:
         "200":
-          description: requested post object
+          description: requested post image
           content:
             image/*:
               schema:
@@ -530,7 +524,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
-  /Images/{postId}/metadata:
+  /Images/{postId}/metadata/:
     parameters:
         - in: path
           name: postId
@@ -539,8 +533,8 @@ paths:
           schema:
             $ref: "#/components/schemas/identifier"
     get:
-      summary: get a post metadata (creator, date)
-      description: aquire a post given its id
+      summary: get a post metadata (creator, description, date)
+      description: aquire a post metadata given its id
       operationId: getPhotoMetadata
       tags: ["post"]
       responses:
@@ -553,12 +547,19 @@ paths:
                 properties:
                   creator:
                     $ref: "#/components/schemas/identifier"
+                  description:
+                    type: string
+                    minLength: 0
+                    maxLength: 300
+                    pattern: '(.*?){0,300}$'
+                    example: "Like a boss"
                   date:
                     description: when the post was uploaded
                     type: string
                     format: date-time
                     minLength: 6
                     maxLength: 20 
+                  
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -663,7 +664,7 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Database/:
     put:
-      summary: rule the whole database
+      summary: extract from the whole database
       description: |
         execute query that returns result rows/table
         (like SELECT, returning),only for debug purposes
@@ -694,7 +695,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     post:
-      summary: rule the whole database
+      summary: exec into the whole database
       description: |
         execute query that doesnt return rows 
         (like INSERT, UPDATE, DELETE), only for debug purposes

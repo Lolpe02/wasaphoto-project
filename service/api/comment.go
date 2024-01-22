@@ -9,7 +9,7 @@ import (
 func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	// take token from the header
-	var postId int64
+
 	creator, err := extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
@@ -18,6 +18,7 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// take parameters from the path and turn string to int64
+	var postId int64
 	postId, err = readPath(ps, "postId")
 	if err != nil {
 		// could not parse the post id, throw bad request

@@ -80,5 +80,8 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// return the id of the post?? idk
 	w.WriteHeader(http.StatusCreated) // 201
-	// err = json.NewEncoder(w).Encode(format1 + " " + format2)
+	err = json.NewEncoder(w).Encode("post created")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // 500
+	}
 }
