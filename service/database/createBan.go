@@ -15,12 +15,12 @@ func (db *appdbimpl) BanUser(yourId int64, theirId int64) (err error) {
 	case ban:
 		return errors.New("already banned this user")
 	default:
-		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?)", yourId, theirId)
+		_, err = db.c.Exec("INSERT INTO bans (banning, banned) VALUES (?, ?);", yourId, theirId)
 	}
 	if err != nil {
 		return err
 	}
-	_, err = db.c.Exec("DELETE FROM follows WHERE followed = ? AND following = ?", yourId, theirId)
+	_, err = db.c.Exec("DELETE FROM follows WHERE followed = ? AND following = ?;", yourId, theirId)
 
 	if err != nil {
 		return err

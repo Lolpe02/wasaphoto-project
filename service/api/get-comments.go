@@ -53,7 +53,7 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 	var comments []comment
 	for _, commentId := range commentIds {
 		// get the comment object
-		creator, content, date, errcom := rt.db.GetComment(commentId)
+		creator, _, content, date, errcom := rt.db.GetComment(commentId)
 		if errcom != nil {
 			// could not get comment, throw internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500

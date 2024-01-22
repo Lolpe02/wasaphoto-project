@@ -10,9 +10,9 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 	var rows *sql.Rows
 	switch {
 	case specificUser != -1:
-		rows, err = db.c.Query("SELECT commentId FROM comments WHERE postId = ? AND userId = ? ORDER BY date DESC", targetPost, specificUser)
+		rows, err = db.c.Query("SELECT commentId FROM comments WHERE postId = ? AND userId = ? ORDER BY date DESC;", targetPost, specificUser)
 	default:
-		rows, err = db.c.Query("SELECT commentId FROM comments WHERE postId = ? ORDER BY date DESC", targetPost)
+		rows, err = db.c.Query("SELECT commentId FROM comments WHERE postId = ? ORDER BY date DESC;", targetPost)
 	}
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS count
 		return

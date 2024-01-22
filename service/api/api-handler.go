@@ -13,7 +13,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/Images/:postId/likes/", rt.like)
 	rt.router.DELETE("/Images/:postId/likes/:yourId", rt.unlike)
 	rt.router.GET("/Images/:postId/comments/", rt.getComments)
-	// rt.router.GET("/Images/:postId/metadata/", rt.getMetadata)
+	rt.router.GET("/Images/:postId/metadata/", rt.GetPostMetadata)
 	rt.router.POST("/Images/:postId/comments/", rt.comment)
 	rt.router.DELETE("/Images/:postId/comments/:yourId", rt.uncomment)
 	rt.router.PATCH("/Users/", rt.setMyUserName)

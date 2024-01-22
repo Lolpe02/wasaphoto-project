@@ -23,7 +23,7 @@ func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (alreadyExists bool
 	case banned:
 		return true, errors.New("banned by this user")
 	default:
-		res, err = db.c.Exec("INSERT OR IGNORE INTO follows (following, followed) VALUES (?, ?)", yourId, theirId)
+		res, err = db.c.Exec("INSERT OR IGNORE INTO follows (following, followed) VALUES (?, ?);", yourId, theirId)
 	}
 	if err != nil {
 		return true, err

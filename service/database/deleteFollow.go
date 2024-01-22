@@ -9,7 +9,7 @@ import (
 
 func (db *appdbimpl) UnfollowUser(yourId int64, theirId int64) (err error) {
 	var res sql.Result
-	res, err = db.c.Exec("DELETE FROM follows WHERE following = ? AND followed = ?", yourId, theirId)
+	res, err = db.c.Exec("DELETE FROM follows WHERE following = ? AND followed = ?;", yourId, theirId)
 	if err != nil {
 		return err
 	}

@@ -414,7 +414,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"       
-  /Users/me/myStream/:
+  /Users/me/myStream:
     get:
       summary: watch your friends' photos
       description: |

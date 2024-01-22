@@ -62,7 +62,7 @@ func (db *appdbimpl) UploadPhoto(username string, photo components.Photo, photo_
 
 	// Insert photo
 
-	_, err = db.c.Exec(`INSERT OR REPLACE INTO posts (post_ID, poster_ID, description, creation_date) VALUES (?, ?, ?, ?)`, photo_ID, userID, photo.Desc, creation_time)
+	_, err = db.c.Exec(`INSERT OR REPLACE INTO posts (postId, poster_ID, description, creation_date) VALUES (?, ?, ?, ?)`, photo_ID, userID, photo.Desc, creation_time)
 
 	if err != nil {
 		return components.InternalServerError, fmt.Errorf("error inserting photo: %w", err)

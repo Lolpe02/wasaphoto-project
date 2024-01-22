@@ -21,9 +21,16 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	if err != nil {
 		// could not get likes, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
+		err = json.NewEncoder(w).Encode("could not get feed " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
 		return
 	}
 	// return the list of user ids
 	w.WriteHeader(http.StatusOK) // 200
-	json.NewEncoder(w).Encode(postIds)
+	err = json.NewEncoder(w).Encode(postIds)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // 500
+	}
 }

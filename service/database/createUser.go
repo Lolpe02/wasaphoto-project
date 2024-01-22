@@ -20,7 +20,7 @@ func (db *appdbimpl) CreateUser(username string) (yourUserId int64, alreadyExist
 	if errors.Is(err, sql.ErrNoRows) {
 		alreadyExists = false
 		// user does not exist, create it
-		err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId", username).Scan(&yourUserId)
+		err = db.c.QueryRow("INSERT INTO users (userName) VALUES (?) RETURNING userId;", username).Scan(&yourUserId)
 		if err != nil {
 			return -1, false, err
 		}

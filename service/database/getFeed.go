@@ -8,7 +8,7 @@ import (
 
 func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 	var rows *sql.Rows
-	rows, err = db.c.Query("SELECT postId FROM images JOIN follows ON images(userId) = followed WHERE following = ? ORDER BY time DESC", yourId)
+	rows, err = db.c.Query("SELECT images.postId FROM images JOIN follows ON images.userId = follows.followed WHERE follows.following = ? ORDER BY images.time DESC;", yourId)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS count
 		return
 	}
@@ -21,7 +21,7 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&postId); rowerr != nil {
-			return
+			return nil, rowerr
 		}
 
 		// Append the retrieved Id to the list
@@ -34,6 +34,5 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 		return
 	}
 
-	// Print or use the retrieved Id list
 	return
 }

@@ -9,7 +9,7 @@ import (
 
 func (db *appdbimpl) ChangeUsername(yourUserId int64, newUsername string) (err error) {
 	var res sql.Result
-	res, err = db.c.Exec("UPDATE users SET userName = ? WHERE userName != ? AND userId = ?", newUsername, yourUserId, yourUserId)
+	res, err = db.c.Exec("UPDATE users SET userName = ? WHERE userName != ? AND userId = ?;", newUsername, yourUserId, yourUserId)
 	if err != nil {
 		// could not update the user, throw internal server error
 		return err

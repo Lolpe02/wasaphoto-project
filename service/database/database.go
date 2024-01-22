@@ -35,6 +35,7 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"os"
 
 	"github.com/gofrs/uuid"
 	// "github.com/mattn/go-sqlite3"
@@ -55,10 +56,11 @@ type AppDatabase interface {
 	PutComment(creator int64, content string, post int64) (newCommentId int64, err error)
 	Uncomment(creator int64, commentId int64) (err error)
 	GetCommentList(targetPost int64, specificUser int64) (commentIds []int64, err error)
-	GetComment(commentId int64) (creator int64, content string, date string, err error)
+	GetComment(commentId int64) (creator int64, postId int64, content string, date string, err error)
 	CreatePost(image *multipart.File, desc *string, enc string, creator int64) (postId int64, err error)
 	Unpost(creator int64, postId int64) (err error)
-	GetPost(postId int64) (retrievedImage []byte, userId int64, date string, err error)
+	GetPost(postId int64) (imagepointer *os.File, imageBytes *[]byte, err error)
+	GetMetadata(postId int64) (userId int64, description string, date string, err error)
 	FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error)
 	UnfollowUser(yourId int64, theirId int64) (err error)
 	BanUser(yourId int64, theirId int64) (err error)
@@ -84,12 +86,18 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	}
 
 	var PRAGMAactive bool
-	err7 := db.QueryRow("PRAGMA foreign_keys = ON;").Scan(&PRAGMAactive)
+	err7 := db.QueryRow("PRAGMA foreign_keys;").Scan(&PRAGMAactive)
 	if errors.Is(err7, sql.ErrNoRows) {
 		// do nothing
 		// return nil, fmt.Errorf("error activating foreign keys: %w", err7)
 	} else if err7 != nil {
 		return nil, fmt.Errorf("error not activating foreign keys: %w", err7)
+	}
+	if !PRAGMAactive {
+		_, err7 = db.Exec("PRAGMA foreign_keys = ON;")
+		if err7 != nil {
+			return nil, fmt.Errorf("error activating foreign keys: %w", err7)
+		}
 	}
 
 	// Check if table exists. If not, the database is empty, and we need to create the structure
@@ -109,12 +117,7 @@ func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {
 	var images string
 	err2 := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='images';`).Scan(&images)
 	if errors.Is(err2, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE images (
-			 postId INTEGER PRIMARY KEY,
-			 userId INTEGER NOT NULL, 
-			 description STRING,
-			 time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			 FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE);`
+		sqlStmt := `CREATE TABLE images (postId INTEGER PRIMARY KEY, userId INTEGER NOT NULL, description TEXT, time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE ON UPDATE CASCADE);`
 		_, err2 = db.Exec(sqlStmt)
 		if err2 != nil {
 			return nil, fmt.Errorf("error creating database structure table images: %w", err2)

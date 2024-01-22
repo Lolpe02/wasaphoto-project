@@ -13,7 +13,7 @@ import (
 func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error) {
 	var rows *sql.Rows
 	present = false
-	rows, err = db.c.Query("SELECT following FROM follows WHERE followed = ? ", targetUserId)
+	rows, err = db.c.Query("SELECT following FROM follows WHERE followed = ?;", targetUserId)
 
 	if err != nil {
 		return

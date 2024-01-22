@@ -1,7 +1,7 @@
 package api
 
 type user struct {
-	Id       int64   `json:"userId"`
+	UserId   int64   `json:"userId"`
 	Name     string  `json:"userName"`
 	Date     string  `json:"date"`
 	Profile  []int64 `json:"posted"`
@@ -9,9 +9,9 @@ type user struct {
 	Followed []int64 `json:"followed"`
 }
 type post struct {
-	Image   []byte `json:"photo"`
-	Id      int64  `json:"id"`
-	Creator int64  `json:"creator"`
+	PostId  int64  `json:"postId"`
+	Creator int64  `json:"userId"`
+	Desc    string `json:"description"`
 	Date    string `json:"date"`
 }
 type like struct {

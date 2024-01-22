@@ -24,7 +24,6 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 	var handler *multipart.FileHeader
 	description := r.FormValue("description")
 	file, handler, err = r.FormFile("photo")
-	defer file.Close()
 
 	if err != nil {
 		// could not read file, bad request
@@ -35,6 +34,7 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 		}
 		return
 	}
+
 	mime := handler.Header.Get("Content-Type")
 	parts := strings.Split(mime, "/")
 	if len(parts) != 2 {
@@ -68,41 +68,10 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 		}
 		return
 	}
-
-	/*
-
-		outFile, err := os.Create(description + "tmpimmagini/image.png")
-		if err != nil {
-			// could not create post, internal server error
-			w.WriteHeader(http.StatusInternalServerError) // 500
-			err = json.NewEncoder(w).Encode("cant create image " + err.Error())
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError) // 500
-			}
-			return
-		}
-		defer outFile.Close()
-		// turn string into image
-		var img image.Image
-		img, _, err = image.Decode(strings.NewReader(immagine))
-
-		if err != nil {
-			// could not decode post, bad request
-			w.WriteHeader(http.StatusBadRequest) // 400
-			err = json.NewEncoder(w).Encode("cant decode image " + err.Error())
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError) // 500
-			}
-			return
-		}*/
-
-	// create the post
-
-	// err = json.NewEncoder(w).Encode("type:  " + format2 + "DESC:  ")
-	if err != nil {
-		// could not create post, internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("could not create post " + err.Error())
+	if err = file.Close(); err != nil {
+		// could not read file, bad request
+		w.WriteHeader(http.StatusBadRequest) // 400
+		err = json.NewEncoder(w).Encode("cant close file " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 		}
