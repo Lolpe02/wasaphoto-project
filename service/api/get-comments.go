@@ -18,6 +18,44 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
+
+	// authenticate the user
+	var authUserId int64
+	authUserId, err = extractToken(r)
+	if err != nil {
+		// not authenticated, throw unauthorized
+		w.WriteHeader(http.StatusUnauthorized) // 401
+		return
+	}
+	// check if user follows creator
+	var postCreator int64
+	postCreator, _, _, err = rt.db.GetMetadata(postId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		err = json.NewEncoder(w).Encode("couldnt get post owner")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	var follows bool
+	_, follows, err = rt.db.GetFollowing(postCreator, authUserId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // 401
+		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	if !follows && authUserId != postCreator {
+		w.WriteHeader(http.StatusUnauthorized) // 401
+		err = json.NewEncoder(w).Encode("you dont follow the owner")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
 	// get possible query parameters named user
 	query := r.URL.Query().Get("commenter")
 	if query != "" {
@@ -44,11 +82,7 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 			return
 		}
 	}
-	if err != nil {
-		// could not get likes, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		return
-	}
+
 	// iterate over the list of comment ids and create comment objects list
 	var comments []comment
 	for _, commentId := range commentIds {
@@ -59,13 +93,26 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 			w.WriteHeader(http.StatusInternalServerError) // 500
 			return
 		}
+		// get userName
+		var creatorName string
+		creatorName, _, err = rt.db.SearchById(creator)
+		if err != nil {
+			// could not get userName, throw internal server error
+			w.WriteHeader(http.StatusInternalServerError) // 500
+			return
+		}
 		// create the comment object
-		comment := comment{postId, creator, content, date}
+		comment := comment{commentId, creatorName, content, date}
 		// append the comment object to the list
 		comments = append(comments, comment)
 	}
 
 	// return the list of user ids
 	w.WriteHeader(http.StatusOK) // 200
-	json.NewEncoder(w).Encode(comments)
+	err = json.NewEncoder(w).Encode(comments)
+	if err != nil {
+		// could not encode the list, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		return
+	}
 }

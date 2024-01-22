@@ -54,7 +54,7 @@ type AppDatabase interface {
 	Unlike(targetPost int64, creator int64) (err error)
 	GetLikes(targetPost int64) (userIds []int64, err error)
 	PutComment(creator int64, content string, post int64) (newCommentId int64, err error)
-	Uncomment(creator int64, commentId int64) (err error)
+	Uncomment(creator int64, postId int64, commentId int64) (err error)
 	GetCommentList(targetPost int64, specificUser int64) (commentIds []int64, err error)
 	GetComment(commentId int64) (creator int64, postId int64, content string, date string, err error)
 	CreatePost(image *multipart.File, desc *string, enc string, creator int64) (postId int64, err error)

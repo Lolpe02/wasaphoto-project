@@ -27,19 +27,6 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	// check if user exists
-	/*_, _, err = rt.db.SearchById(IdtoFollow)
-	if err != nil {
-		if err.Error() == "not found" {
-			// could not follow, throw not found
-			w.WriteHeader(http.StatusNotFound) // 404
-		} else {
-			// could not follow, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) // 500
-		}
-		return
-	}*/
-
 	follow := follow{yourId, IdtoFollow}
 	var exists bool
 	exists, err = rt.db.FollowUser(follow.FollowingId, follow.FollowedId)
@@ -53,6 +40,23 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 				return
 			}
 			return
+		} else if err.Error() == "banned by this user" {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusForbidden) // 403
+			err = json.NewEncoder(w).Encode("could not follow user, you are banned " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+				return
+			}
+			return
+		} else if err.Error() == "FOREIGN KEY constraint failed" {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusNotFound) // 404
+			err = json.NewEncoder(w).Encode("could not follow user, it doesnt exists " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+				return
+			}
 		} else {
 			// could not follow, throw internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500

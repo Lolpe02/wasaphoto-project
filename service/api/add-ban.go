@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -26,24 +27,24 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
-
-	// check if user exists
-	_, _, err = rt.db.SearchById(IdtoBan)
-	if err != nil {
-		if err.Error() == "not found" {
-			// could not follow, throw not found
-			w.WriteHeader(http.StatusNotFound) // 404
-		} else {
-			// could not follow, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) // 500
-			err = json.NewEncoder(w).Encode("could not ban" + err.Error())
-			if err != nil {
+	/*
+		// check if user exists
+		_, _, err = rt.db.SearchById(IdtoBan)
+		if err != nil {
+			if err.Error() == "not found" {
+				// could not follow, throw not found
+				w.WriteHeader(http.StatusNotFound) // 404
+			} else {
+				// could not follow, throw internal server error
 				w.WriteHeader(http.StatusInternalServerError) // 500
-				return
+				err = json.NewEncoder(w).Encode("could not ban" + err.Error())
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError) // 500
+					return
+				}
 			}
-		}
-		return
-	}
+			return
+		}*/
 
 	ban := ban{yourId, IdtoBan}
 	err = rt.db.BanUser(ban.BannerId, ban.BannedId)
@@ -53,7 +54,15 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 			err = json.NewEncoder(w).Encode(err.Error())
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
-
+				return
+			}
+		} else if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+			// could not follow, throw not found
+			w.WriteHeader(http.StatusNotFound) // 404
+			err = json.NewEncoder(w).Encode("could not ban user, it doesnt exists " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+				return
 			}
 		} else {
 			// could not follow, throw internal server error

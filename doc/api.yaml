@@ -3,9 +3,9 @@ info:
   title: "WasaPhoto"
   version: 1.0.0
   description: api for "WasaPhoto" project
-servers:
-  - url: http://localhost:3000
-    description: Local server
+#servers:
+#  - url: http://localhost:3000
+#    description: Local server
 tags:
   - name: user 
     description: Operations related to users
@@ -57,14 +57,10 @@ components:
       description: post comment
       type: object
       properties:
-        creator:
+        commentId:
           $ref: "#/components/schemas/identifier"
-        date:
-          description: when this comment was sent
-          type: string
-          format: date-time
-          minLength: 6
-          maxLength: 20
+        creator:
+          $ref: "#/components/schemas/User/properties/userName"
         content:
           description: user's input string
           type: string
@@ -72,6 +68,13 @@ components:
           minLength: 1
           maxLength: 300
           example: "I wish I knew how to write an api"
+        date:
+          description: when this comment was sent
+          type: string
+          format: date-time
+          minLength: 6
+          maxLength: 20
+        
     User:
       title: User
       description: this object is a single user
@@ -226,7 +229,7 @@ paths:
                 description: array of userlikes
                 type: array
                 items:
-                  {$ref: "#/components/schemas/identifier"}
+                  {$ref: "#/components/schemas/User/properties/userName"}
                 minItems: 0
                 maxItems: 10000
         "403":
@@ -257,7 +260,7 @@ paths:
           $ref: "#/components/responses/OkDone"
         "201":
           $ref: "#/components/responses/OkDone"
-        "403":
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFound"
@@ -284,6 +287,11 @@ paths:
         schema: 
           $ref: "#/components/schemas/identifier"
         required: true
+      - name: commenter
+        in: query
+        schema: 
+          $ref: "#/components/schemas/User/properties/userName"
+        required: false
     get:
       summary: get commets of the post
       description: get a list of comment objects of the post
@@ -311,7 +319,7 @@ paths:
       summary: place a comment on the post
       description: insert a comment object in the comment list of the post
       operationId: commentPhoto
-      tags: ["comment"]
+      tags: ["comment", "post"]
       requestBody:
         description: comment
         required: true
@@ -344,11 +352,12 @@ paths:
       summary: delete your comment on the post
       description: remove a comment object in the comment list of the post
       operationId: uncommentPhoto
-      tags: ["comment"]
-      
+      tags: ["comment", "post"]
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
+        "400":
+          $ref: "#/components/responses/UnauthorizedError"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":

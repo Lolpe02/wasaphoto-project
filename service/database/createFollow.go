@@ -26,6 +26,9 @@ func (db *appdbimpl) FollowUser(yourId int64, theirId int64) (alreadyExists bool
 		res, err = db.c.Exec("INSERT OR IGNORE INTO follows (following, followed) VALUES (?, ?);", yourId, theirId)
 	}
 	if err != nil {
+		/*if strings.Contains(err.Error(), "FOREIGN KEY") {
+			return true, nil
+		}*/
 		return true, err
 	}
 	var changed int64

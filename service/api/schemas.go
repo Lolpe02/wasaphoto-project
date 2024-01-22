@@ -18,10 +18,10 @@ type like struct {
 	PostId int64 `json:"post"`
 }
 type comment struct {
-	PostId int64  `json:"post"`
-	UserId int64  `json:"creator"`
-	Date   string `json:"date"`
-	Text   string `json:"content"`
+	CommentId int64  `json:"commentId"`
+	UserName  string `json:"creator"`
+	Text      string `json:"content"`
+	Date      string `json:"date"`
 }
 type follow struct {
 	FollowingId int64 `json:"followingId"`

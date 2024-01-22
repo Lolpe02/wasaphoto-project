@@ -42,4 +42,10 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	// return the id of the comment?? idk
 	w.WriteHeader(http.StatusCreated) // 201
+	err = json.NewEncoder(w).Encode("comment created")
+	if err != nil {
+		// could not encode comment, internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		return
+	}
 }
