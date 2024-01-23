@@ -16,7 +16,7 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 	rows, err = db.c.Query("SELECT following FROM follows WHERE followed = ?;", targetUserId)
 
 	if err != nil {
-		return
+		return nil, false, err
 	}
 	defer rows.Close()
 
@@ -27,7 +27,7 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&followingId); rowerr != nil {
-			return nil, false, err
+			return nil, false, rowerr
 		}
 		if followingId == testId {
 			present = true

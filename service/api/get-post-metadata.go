@@ -32,7 +32,7 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 	var date string
 	userId, description, date, err = rt.db.GetMetadata(postId)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			// post not found, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			return

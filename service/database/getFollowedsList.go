@@ -27,7 +27,7 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&followedId); rowerr != nil {
-			return nil, false, err
+			return nil, false, rowerr
 		}
 		if followedId == testId {
 			present = true

@@ -49,7 +49,7 @@ func (rt *_router) unlike(w http.ResponseWriter, r *http.Request, ps httprouter.
 	// Call the database function to delete the like
 	err = rt.db.Unlike(pid, creator)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			w.WriteHeader(http.StatusNotFound)
 			err = json.NewEncoder(w).Encode("like not found")
 			if err != nil {

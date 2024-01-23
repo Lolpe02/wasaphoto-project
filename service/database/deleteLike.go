@@ -18,7 +18,7 @@ func (db *appdbimpl) Unlike(targetPost int64, creator int64) (err error) {
 		if err != nil {
 			return
 		}
-		return errors.New("not found")
+		return errors.New(NotFound)
 	}
 	return
 }

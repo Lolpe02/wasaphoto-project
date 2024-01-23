@@ -17,7 +17,7 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 	err = db.c.QueryRow("SELECT description, time FROM images WHERE postId = ? AND userId = ?;", postId, creator).Scan(&desc, &time)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return errors.New("not found")
+			return errors.New(NotFound)
 		}
 		return err
 	}
@@ -32,7 +32,7 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 		return err
 	}
 	if changed == 0 {
-		return errors.New("not found")
+		return errors.New(NotFound)
 	}
 	// delete likes and comments
 	_, err = db.c.Exec("DELETE FROM likes WHERE postId = ?", postId)

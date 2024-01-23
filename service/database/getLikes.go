@@ -10,7 +10,7 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 	var rows *sql.Rows
 	rows, err = db.c.Query("SELECT userId FROM likes WHERE postId = ?;", targetPost)
 	if err != nil { // also the # : , (SELECT COUNT(userId) FROM likes WHERE postId = ?) AS countres
-		return
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -21,7 +21,7 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 		// Scan the Id values from each row into variables
 
 		if rowerr := rows.Scan(&userId); rowerr != nil {
-			return
+			return nil, rowerr
 		}
 
 		// Append the retrieved Id to the list

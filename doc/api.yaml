@@ -458,12 +458,14 @@ paths:
               description: upload your photo file (max 32MB image, max 300 chars description)
               type: object
               properties: # Request parts
-                photo: 
+                photo:
+                  description: image file in binary string to upload (max 32MB, png, jpeg, gif)
                   type: string
                   format: binary
                   minLength: 1
                   maxLength: 32000000
                 description:
+                  description: user's caption for the post
                   type: string
                   minLength: 0
                   maxLength: 300
@@ -558,6 +560,7 @@ paths:
                   creatorId:
                     $ref: "#/components/schemas/identifier"
                   description:
+                    description: user's caption for the post
                     type: string
                     minLength: 0
                     maxLength: 300

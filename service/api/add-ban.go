@@ -31,7 +31,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		// check if user exists
 		_, _, err = rt.db.SearchById(IdtoBan)
 		if err != nil {
-			if err.Error() == "not found" {
+			if err.Error() == NotFound {
 				// could not follow, throw not found
 				w.WriteHeader(http.StatusNotFound) // 404
 			} else {
@@ -56,7 +56,7 @@ func (rt *_router) ban(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 				w.WriteHeader(http.StatusInternalServerError) // 500
 				return
 			}
-		} else if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+		} else if strings.Contains(err.Error(), FKviolation) {
 			// could not follow, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			err = json.NewEncoder(w).Encode("could not ban user, it doesnt exists " + err.Error())

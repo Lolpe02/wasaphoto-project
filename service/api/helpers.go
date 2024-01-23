@@ -50,6 +50,14 @@ func isValid(name string) bool {
 	return valid && 3 <= len(name) && len(name) <= 20
 }
 
+// constant strings
+
+const NotFound = string("not found")
+
+const FKviolation = string("FOREIGN KEY constraint failed")
+
+const UQviolation = string("UNIQUE constraint failed")
+
 // Function to check if the error is a foreign key violation
 /*func isForeignKeyViolation(err error) bool {
 	// SQLite error codes for foreign key violations

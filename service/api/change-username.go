@@ -48,9 +48,9 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	// Call the changeUsername database function with the new username
 	err = rt.db.ChangeUsername(yourId, newUsername)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			w.WriteHeader(http.StatusNotFound)
-		} else if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		} else if strings.Contains(err.Error(), UQviolation) {
 			w.WriteHeader(http.StatusBadRequest) // 400
 			err = json.NewEncoder(w).Encode("username already taken")
 			if err != nil {

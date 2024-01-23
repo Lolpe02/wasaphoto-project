@@ -15,14 +15,15 @@ func (db *appdbimpl) ChangeUsername(yourUserId int64, newUsername string) (err e
 		return err
 	}
 	// check if the user was updated
-	rows, err := res.RowsAffected()
+	var rows int64
+	rows, err = res.RowsAffected()
 	if err != nil {
 		// could not update the user, throw internal server error
 		return err
 	}
 	if rows == 0 {
 		// the user was not updated, throw bad request
-		return errors.New("not found")
+		return errors.New(NotFound)
 	}
-	return nil
+	return
 }

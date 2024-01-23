@@ -19,7 +19,7 @@ func (db *appdbimpl) UnbanUser(yourId int64, theirId int64) (err error) {
 		return err
 	}
 	if rowsAffected == 0 {
-		return errors.New("not found")
+		return errors.New(NotFound)
 	}
 
 	return

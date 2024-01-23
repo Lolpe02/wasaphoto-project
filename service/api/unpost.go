@@ -27,7 +27,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// put the comment in the database
 	err = rt.db.Unpost(creator, postId)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			w.WriteHeader(http.StatusNotFound) // 404
 			err = json.NewEncoder(w).Encode("post not found")
 			if err != nil {

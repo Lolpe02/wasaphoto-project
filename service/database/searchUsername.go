@@ -14,7 +14,7 @@ func (db *appdbimpl) SearchByUsername(targetUser string) (selUserId int64, err e
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// Return nil values and specify the error
-			return -1, errors.New("not found")
+			return -1, errors.New(NotFound)
 		}
 		// Return other errors as is
 		return -1, err

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
 	// "os"
 
 	"github.com/julienschmidt/httprouter"
@@ -31,7 +32,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	var creator int64
 	creator, _, _, err = rt.db.GetMetadata(postId)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			// post not found, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			return
@@ -62,7 +63,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	var imageBytes *[]byte
 	_, imageBytes, err = rt.db.GetPost(postId)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			// post not found, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			return

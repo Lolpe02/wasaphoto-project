@@ -36,7 +36,7 @@ func (rt *_router) uncomment(w http.ResponseWriter, r *http.Request, ps httprout
 	// put the comment in the database
 	err = rt.db.Uncomment(creator, postId, commentId)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			// could not find the post, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			return

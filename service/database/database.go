@@ -78,6 +78,8 @@ type appdbimpl struct {
 	uuidGen *uuid.Gen
 }
 
+const NotFound = string("not found")
+
 // New returns a new instance of AppDatabase based on the SQLite connection `db`.
 // `db` is required - an error will be returned if `db` is `nil`.
 func New(db *sql.DB, genId *uuid.Gen) (AppDatabase, error) {

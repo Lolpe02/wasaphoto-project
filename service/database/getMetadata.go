@@ -13,7 +13,7 @@ func (db *appdbimpl) GetMetadata(postId int64) (userId int64, description string
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// Return nil values and specify the error
-			return -1, "", "", errors.New("not found")
+			return -1, "", "", errors.New(NotFound)
 		}
 		return -1, "", "", err
 	}

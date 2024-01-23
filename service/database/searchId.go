@@ -14,7 +14,7 @@ func (db *appdbimpl) SearchById(targetUserId int64) (selUserName string, subscri
 		// Handling sql.ErrNoRows
 		if errors.Is(err, sql.ErrNoRows) {
 			// Return nil values and specify the error
-			return "", "", errors.New("not found")
+			return "", "", errors.New(NotFound)
 		}
 		// Return other errors as is
 		return "", "", err

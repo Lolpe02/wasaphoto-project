@@ -10,10 +10,8 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 	var rows *sql.Rows
 	present = false
 	rows, err = db.c.Query("SELECT banned FROM bans WHERE banning = ?;", targetUserId)
-
 	if err != nil {
-
-		return
+		return nil, false, err
 	}
 	defer rows.Close()
 

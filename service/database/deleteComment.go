@@ -18,7 +18,7 @@ func (db *appdbimpl) Uncomment(creatorId int64, postId int64, commentId int64) (
 		if err != nil {
 			return err
 		}
-		return errors.New("not found")
+		return errors.New(NotFound)
 	}
 	return
 }

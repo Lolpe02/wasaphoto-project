@@ -22,7 +22,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 	targetId, err := rt.db.SearchByUsername(username)
 	if err != nil {
 		// could not get id, throw internal server error
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			w.WriteHeader(http.StatusNotFound) // 404
 			err = json.NewEncoder(w).Encode("user not found " + username)
 			if err != nil {

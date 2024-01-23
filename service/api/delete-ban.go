@@ -28,7 +28,7 @@ func (rt *_router) unban(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	err = rt.db.UnbanUser(yourId, IdtoUnban)
 	if err != nil {
-		if err.Error() == "not found" {
+		if err.Error() == NotFound {
 			// could not unban, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			err = json.NewEncoder(w).Encode("user not banned " + err.Error())

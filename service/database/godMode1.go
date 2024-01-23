@@ -40,9 +40,14 @@ func (db *appdbimpl) GodMode1(query string) (result []map[string]interface{}, er
 		// Create a map to store the result for this row
 		rowMap := make(map[string]interface{})
 		for i, col := range columns {
-			// Convert each column value to a JSON-compatible type
-			val := *values[i].(*interface{})
-			rowMap[col] = val
+			// Check if the value is of type interface{}
+			if val, ok := values[i].(*interface{}); ok {
+				// Convert each column value to a JSON-compatible type
+				rowMap[col] = *val
+			} else {
+				// Handle error
+				return nil, err
+			}
 		}
 
 		// Append the row map to the results slice
