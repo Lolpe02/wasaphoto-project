@@ -73,8 +73,7 @@ components:
           type: string
           format: date-time
           minLength: 6
-          maxLength: 20
-        
+          maxLength: 20      
     User:
       title: User
       description: this object is a single user
@@ -365,7 +364,6 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
   /Users/:
-
     patch:
       summary: change your userName
       description: change your userName, it must be valid
@@ -457,6 +455,7 @@ paths:
         content:
           multipart/form-data:
             schema:
+              description: upload your photo file (max 32MB image, max 300 chars description)
               type: object
               properties: # Request parts
                 photo: 
@@ -520,6 +519,7 @@ paths:
           content:
             image/*:
               schema:
+                description: image file
                 type: string
                 format: binary
                 minLength: 1
@@ -552,9 +552,10 @@ paths:
           content:
             application/json:
               schema:
+                description: post metadata object (creator, description, date)
                 type: object
                 properties:
-                  creator:
+                  creatorId:
                     $ref: "#/components/schemas/identifier"
                   description:
                     type: string
@@ -591,6 +592,8 @@ paths:
             schema: 
               $ref: "#/components/schemas/User/properties/userId"
       responses:
+        "200":
+          $ref: "#/components/responses/OkDone"
         "201":
           $ref: "#/components/responses/OkDone"
         "403":
@@ -639,6 +642,8 @@ paths:
             schema:
               $ref: "#/components/schemas/User/properties/userId"
       responses:
+        "200":
+          $ref: "#/components/responses/OkDone"
         "201":
           $ref: "#/components/responses/OkDone"
         "403":
@@ -685,8 +690,8 @@ paths:
         content:
           application/json:
             schema:
-              type: string
               description: query to execute
+              type: string
               minLength: 1
               maxLength: 1000
               pattern: ^[\S\s]{1,1000}$
@@ -708,7 +713,7 @@ paths:
       description: |
         execute query that doesnt return rows 
         (like INSERT, UPDATE, DELETE), only for debug purposes
-      operationId: queryDatabase
+      operationId: execDatabase
       tags: ["debug"]
       requestBody:
         description: query
@@ -728,7 +733,16 @@ paths:
           content:
             application/json:
               schema:
-                description: affected
+                description: affected lines / changes
+                type: integer
+                minimum: 0
+                maximum: 9999999999999999999
+        "201":
+          description: number of changed rows
+          content:
+            application/json:
+              schema:
+                description: affected lines / changes
                 type: integer
                 minimum: 0
                 maximum: 9999999999999999999
