@@ -22,15 +22,31 @@ func (db *appdbimpl) CreatePost(image *multipart.File, desc *string, enc string,
 	if err != nil {
 		return -1, err
 	}
+	// create the folder if it doesn't exist
+	_, err = os.Stat(os.TempDir() + "/wasaPhotos")
+	if os.IsNotExist(err) {
+		err = os.Mkdir(os.TempDir()+"/wasaPhotos", 0755)
+		if err != nil {
+			return -1, err
+		}
+	}
 	var dest *os.File
-	dest, err = os.Create(os.TempDir() + "/" + strconv.FormatInt(postId, 10) + "." + enc)
+	dest, err = os.Create(os.TempDir() + "/wasaPhotos/" + strconv.FormatInt(postId, 10) + "." + enc)
 	if err != nil {
+		err = db.Unpost(creator, postId)
+		if err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 	// insert the image in images folder
 	var bytesWritten int64
 	bytesWritten, err = io.Copy(dest, *image)
 	if err != nil || bytesWritten == 0 {
+		err = db.Unpost(creator, postId)
+		if err != nil {
+			return -1, err
+		}
 		return -1, errors.New("nothing written")
 	}
 
