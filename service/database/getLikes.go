@@ -16,12 +16,14 @@ func (db *appdbimpl) GetLikes(targetPost int64) (userIds []int64, err error) {
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		var userId int64
 
+		if err = rows.Err(); err != nil {
+			return
+		}
 		// Scan the Id values from each row into variables
-
-		if rowerr := rows.Scan(&userId); rowerr != nil {
-			return nil, rowerr
+		var userId int64
+		if err = rows.Scan(&userId); err != nil {
+			return
 		}
 
 		// Append the retrieved Id to the list

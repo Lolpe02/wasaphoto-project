@@ -22,12 +22,15 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		var followingId int64
+
+		if err = rows.Err(); err != nil {
+			return
+		}
 
 		// Scan the Id values from each row into variables
-
-		if rowerr := rows.Scan(&followingId); rowerr != nil {
-			return nil, false, rowerr
+		var followingId int64
+		if err = rows.Scan(&followingId); err != nil {
+			return
 		}
 		if followingId == testId {
 			present = true

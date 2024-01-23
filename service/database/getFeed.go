@@ -16,12 +16,15 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		var postId int64
+		
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
 
 		// Scan the Id values from each row into variables
-
-		if rowerr := rows.Scan(&postId); rowerr != nil {
-			return nil, rowerr
+		var postId int64
+		if err = rows.Scan(&postId); err != nil {
+			return nil, err
 		}
 
 		// Append the retrieved Id to the list

@@ -17,6 +17,11 @@ func (db *appdbimpl) GodMode1(query string) (result []map[string]interface{}, er
 
 	// Iterate through the rows
 	for rows.Next() {
+
+		if err = rows.Err(); err != nil {
+			return
+		}
+
 		var columns []string
 		columns, err = rows.Columns()
 		if err != nil {

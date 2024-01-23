@@ -16,11 +16,14 @@ func (db *appdbimpl) GetProfile(targetUserId int64) (idList []int64, err error) 
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		var postId int64
+
+		if err = rows.Err(); err != nil {
+			return
+		}
 
 		// Scan the Id values from each row into variables
-
-		if rowerr := rows.Scan(&postId); rowerr != nil {
+		var postId int64
+		if err = rows.Scan(&postId); err != nil {
 			return
 		}
 

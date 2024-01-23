@@ -21,10 +21,12 @@ func (db *appdbimpl) GetCommentList(targetPost int64, specificUser int64) (comme
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
+
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
 		var commentId int64
-
 		// Scan the Id values from each row into variables
-
 		if err = rows.Scan(&commentId); err != nil {
 			return
 		}

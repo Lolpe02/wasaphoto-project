@@ -22,18 +22,22 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		var followedId int64
+
+		if err = rows.Err(); err != nil {
+			return
+		}
 
 		// Scan the Id values from each row into variables
-
-		if rowerr := rows.Scan(&followedId); rowerr != nil {
-			return nil, false, rowerr
+		var followedId int64
+		if err = rows.Scan(&followedId); err != nil {
+			return
 		}
 		if followedId == testId {
 			present = true
 		}
 		// Append the retrieved Id to the list
 		followedbyTargetIds = append(followedbyTargetIds, followedId)
+
 	}
 
 	// Check for errors encountered during iteration
