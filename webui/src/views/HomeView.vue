@@ -8,7 +8,75 @@ export default {
 		}
 	},
 	methods: {
+		async Logout() {
+			this.$user_state.username = null;
+			this.$user_state.headers.Authorization = null;
+			console.log("Logging out")
+			this.$router.push("/login");
+		},
+
+		async PerformSearch() {
+
+			let search = document.querySelector("input").value;
+
+			search = search.trim();
+
+			if (search.length > 0) {
+				// query ./users for results
+
+				const searcher_id = this.$user_state.headers.Authorization;
+
+				if (searcher_id == null) {
+					return
+				}
+
+				const header = {
+					"Authorization": searcher_id,
+					"user_name": this.$user_state.username
+				}
+
+				let response = await this.$axios.get("/users", {
+					params: {
+						"search_term": search
+					},
+					headers: header
+				});
+
+				if (response.status == 200) {
+					this.search_results = response.data;
+				} else {
+					console.log
+					this.search_results = null;
+				}
+			}
+			else {
+				this.search_results = null;
+			}
+		},
+
+		async ToProfile() {
+
+			if (this.$user_state.username == null) {
+				return
+			}
+
+			this.$router.push("/profile/" + this.$user_state.username);
+		},
+
+		async ToStream() {
+
+			if (this.$user_state.username == null) {
+				return
+			}
+
+			this.$router.push("/stream/" + this.$user_state.username);
+		},	
+		
 		async refresh() {
+			if (this.$user_state.username == null) {
+				console.log("Empty username, redirecting to login")
+				this.$router.push("/login");
+			}
 			this.loading = true;
 			this.errormsg = null;
 			try {

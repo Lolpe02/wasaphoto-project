@@ -16,7 +16,7 @@ func (db *appdbimpl) GetFeed(yourId int64) (postIds []int64, err error) {
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		
+
 		if err = rows.Err(); err != nil {
 			return nil, err
 		}

@@ -2,23 +2,23 @@ package api
 
 /*
 go run ./cmd/webapi/
-curl -v -H 'Content-Type: application/json' -d '{"username": "Lollo"}' localhost:3000/session
+curl -v -H 'Content-Type: application/json' -d '{"username": "Lollo"}' lomalhost:3000/session
 */
 
 /*
 Possible outcomes:
 
 1. checking if decoding operation ended successfully
-   curl -v -H 'Content-Type: application/json' -d '{"username": "Lollo}' localhost:3000/session
+   curl -v -H 'Content-Type: application/json' -d '{"username": "Lollo}' lomalhost:3000/session
    (the JSON data is missing a closing quote resulting in an invalid JSON structure)
 
 2. checking if the username is valid
-   a. curl -v -H 'Content-Type: application/json' -d '{"username": "     "}' localhost:3000/session
+   a. curl -v -H 'Content-Type: application/json' -d '{"username": "     "}' lomalhost:3000/session
       (the client has enterd white spaces only, hence the username is not valid)
 
    b. (username doesn't match string pattern: '^.*?$': it contains a new line)
 
-   c. curl -v -H 'Content-Type: application/json' -d '{"username": "ab"}' localhost:3000/session
+   c. curl -v -H 'Content-Type: application/json' -d '{"username": "ab"}' lomalhost:3000/session
       (username hasn't got required length: is <3 or >16)
 
 3. if the user altready exists, return the ID
@@ -68,8 +68,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err != nil {
 		// the request body was not a parseable JSON or is missing, rejecting the request
 		w.WriteHeader(http.StatusBadRequest) // 400
-		ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
-		// fmt.Fprint(w, "\ndoLogin: the request body was not a parseable JSON or is missing\n")
+		//ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
 		return
 	}
 	// validating username (removing white spaces and new lines)

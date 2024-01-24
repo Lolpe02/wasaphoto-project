@@ -35,5 +35,5 @@ func (rt *_router) Handler() http.Handler {
 }
 
 // useful curl commands:
-// curl -X POST -H 'Content-Type: application/json' -d '"Ermenegildo24"' http://localhost:3000/session
-// curl -X PATCH -H 'Content-Type: application/json' -H "Authorization: Bearer 2" -d '"Ermenegildo24"' http://localhost:3000/Users/2
+// curl -X POST -H 'Content-Type: application/json' -d '"Ermenegildo24"' http://lomalhost:3000/session
+// curl -X PATCH -H 'Content-Type: application/json' -H "Authorization: Bearer 2" -d '"Ermenegildo24"' http://lomalhost:3000/Users/2

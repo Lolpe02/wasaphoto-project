@@ -75,30 +75,3 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 	}
 	return
 }
-
-/*
-func (db *appdbimpl) DeletePhoto(username string, photoID string) (errstring string, err error) {
-
-	userID, err := db.GetUserID(username)
-
-	if err != nil {
-		return components.InternalServerError, fmt.Errorf("error getting user ID: %w", err)
-	}
-
-	_, err = db.c.Exec(`DELETE FROM posts WHERE postId = ? AND poster_ID = ?`, photoID, userID)
-
-	if err != nil {
-		return components.InternalServerError, fmt.Errorf("error deleting photo: %w", err)
-	}
-
-	// erase from /tmp/photos
-
-	err = os.Remove("/tmp/photos/" + photoID + ".png")
-
-	if err != nil {
-		return components.InternalServerError, fmt.Errorf("error deleting photo: %w", err)
-	}
-
-	return "", nil
-}
-*/

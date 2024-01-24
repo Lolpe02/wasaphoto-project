@@ -17,7 +17,7 @@ func (db *appdbimpl) GetBanneds(targetUserId int64, testId int64) (bannedIds []i
 
 	// Iterate through the rows retrieved
 	for rows.Next() {
-		
+
 		if err = rows.Err(); err != nil {
 			return nil, false, err
 		}
