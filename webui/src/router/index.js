@@ -1,14 +1,34 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import HomeView from '../views/HomeView.vue'
+/*
+router.beforeEach((to, from, next) => {
+	// Check if the route requires authentication
+	if (to.matched.some((record) => record.meta.requiresAuth)) {
+		// Check if the user is authenticated
+		const isAuthenticated = this.$user_state.headers.Authorization != null ? true : false;
+
+		if (!isAuthenticated) {
+			// If not authenticated, redirect to the login page
+			next('/login');
+		} else {
+			// If authenticated, proceed to the requested route
+			next();
+		}
+	} else {
+		// If the route doesn't require authentication, proceed
+		next();
+	}
+  }); */
 
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
 	routes: [
 		{path: '/', component: LoginView},
-		{path: '/link1', component: HomeView},
-		{path: '/link2', component: HomeView},
-		{path: '/some/:id/link', component: HomeView},
+		{path: '/login', component: LoginView},
+		{path: '/home', component: HomeView, meta: { requiresAuth: true }, props: { msg: 'Hi, here\'s your daily content' }},
+		{path: '/link2', component: HomeView, meta: { requiresAuth: true }},
+		{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
 	]
 })
 

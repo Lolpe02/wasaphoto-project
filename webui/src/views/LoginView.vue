@@ -16,7 +16,7 @@ export default {
         },
         async login() {
 
-            let username = string(document.getElementById("login-form").value);
+            let username = document.getElementById("login-form").value;
 
             // check username regex
 
@@ -25,11 +25,31 @@ export default {
                 return;
             }
 
+            /*
+            try {
+                const jsonData = { key: 'value' }; // Replace this with your JSON object
 
-            let response = await this.$axios.post("/session", 
-                username
-            );
+                // Using Axios to send a POST request with JSON data
+                const response = await axios.post('your-api-endpoint', jsonString, );
 
+                console.log('Response:', response.data);
+            } 
+            */
+            try {
+                const jsonString = JSON.stringify(username);
+                
+                let response = await this.$axios.post("/session", 
+                    username, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'accept': 'application/json',
+                        },
+                    }
+                );
+                console.log('Response:', response.data);
+            } catch (error) {
+                console.error('Error sending request:', error);
+            }
             //check if the response is 201
 
             if (response.status == 201) {
@@ -50,8 +70,10 @@ export default {
                 return;
             }
             this.$user_state.username = username
+            this.$user_state.token = response.data
+            this.isAuthenticated = true;
             this.error = false;
-            this.$router.push("/stream/" + username);
+            this.$router.push("/home");
 
         }
     },
