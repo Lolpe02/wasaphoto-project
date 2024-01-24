@@ -12,7 +12,14 @@ export default {
 			this.loading = true;
 			this.errormsg = null;
 			try {
-				let response = await this.$axios.get("/");
+				let response = await this.$axios.get("/Users/me/myStream",
+					{
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'accept': 'application/json',
+							'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                        },
+                    });
 				this.some_data = response.data;
 			} catch (e) {
 				this.errormsg = e.toString();

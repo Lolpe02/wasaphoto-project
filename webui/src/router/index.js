@@ -1,25 +1,8 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import HomeView from '../views/HomeView.vue'
-/*
-router.beforeEach((to, from, next) => {
-	// Check if the route requires authentication
-	if (to.matched.some((record) => record.meta.requiresAuth)) {
-		// Check if the user is authenticated
-		const isAuthenticated = this.$user_state.headers.Authorization != null ? true : false;
 
-		if (!isAuthenticated) {
-			// If not authenticated, redirect to the login page
-			next('/login');
-		} else {
-			// If authenticated, proceed to the requested route
-			next();
-		}
-	} else {
-		// If the route doesn't require authentication, proceed
-		next();
-	}
-  }); */
+
 
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -32,6 +15,24 @@ const router = createRouter({
 	]
 })
 
+router.beforeEach((to, next) => {
+	// Check if the route requires authentication
+	if (to.matched.some((record) => record.meta.requiresAuth)) {
+		// Check if the user is authenticated
+		const isAuthenticated = localStorage.getItem('Authorization') != null ? true : false;
+
+		if (!isAuthenticated) {
+			// If not authenticated, redirect to the login page
+			next('/');
+		} else {
+			// If authenticated, proceed to the requested route
+			next();
+		}
+	} else {
+		// If the route doesn't require authentication, proceed
+		next();
+	}
+});
 export default router
 /*
 import {createRouter, createWebHashHistory} from 'vue-router'

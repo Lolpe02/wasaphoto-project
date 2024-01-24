@@ -48,6 +48,7 @@ export default {
                 );
                 console.log('Response:', response.data);
             } catch (error) {
+                this.errormsg = error.toString();
                 console.error('Error sending request:', error);
             }
             //check if the response is 201
@@ -70,8 +71,8 @@ export default {
                 return;
             }
             this.$user_state.username = username
-            this.$user_state.token = response.data
             this.isAuthenticated = true;
+            localStorage.setItem("user_state", JSON.stringify(this.$user_state));
             this.error = false;
             this.$router.push("/home");
 
