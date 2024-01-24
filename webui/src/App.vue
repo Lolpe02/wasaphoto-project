@@ -2,10 +2,6 @@
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 <script>
-export default {}
-</script>
-
-<script>
 export default {
 
 	data: function () {
@@ -20,7 +16,7 @@ export default {
 			this.$user_state.username = null;
 			this.$user_state.headers.Authorization = null;
 			console.log("Logging out")
-			this.$router.push("/");
+			this.$router.push("/login");
 
 		},
 
@@ -84,7 +80,7 @@ export default {
 		async refresh() {
 			if (this.$user_state.username == null) {
 				console.log("Empty username, redirecting to login")
-				this.$router.push("/");
+				this.$router.push("/login");
 			}
 		}
 
@@ -97,10 +93,11 @@ export default {
 }
 
 </script>
+
 <template>
 
 	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/home">MyWASAPhoto</a>
+		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">MyWASAPhoto</a>
 		<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
@@ -115,7 +112,7 @@ export default {
 					</h6>
 					<ul class="nav flex-column">
 						<li class="nav-item">
-							<RouterLink to="/home" class="nav-link">
+							<RouterLink to="/profile" class="nav-link">
 								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
 								Home
 							</RouterLink>
@@ -153,15 +150,17 @@ export default {
 			</main>
 		</div>
 	</div>
+	
 </template>
 
 <style>
 </style>
 
 
+
+
+
 <!-- 
-
-
 
 <template>
 	<nav class="navbar navbar-expand navbar-dark bg-dark bg-gradient shadow-lg fixed-top z-depth-5" role="navigation">

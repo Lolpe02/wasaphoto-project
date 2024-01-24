@@ -4,7 +4,7 @@ export default {
 		return {
 			errormsg: null,
 			loading: false,
-			some_data: null,
+			some_data: [],
 		}
 	},
 	methods: {

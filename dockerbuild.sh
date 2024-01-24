@@ -1,2 +1,2 @@
-docker build -f dockerfile.backend -t wasa-backend .
-docker build -f dockerfile.frontend -t wasa-frontend .
+docker build -f Dockerfile.backend -t wasa-backend .
+docker build -f Dockerfile.frontend -t wasa-frontend .

@@ -7,9 +7,9 @@ import HomeView from '../views/HomeView.vue'
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
 	routes: [
-		{path: '/', component: LoginView},
+		//{path: '/', component: LoginView},
 		{path: '/login', component: LoginView},
-		{path: '/home', component: HomeView, meta: { requiresAuth: true }, props: { msg: 'Hi, here\'s your daily content' }},
+		{path: '/', component: HomeView, meta: { requiresAuth: true }, props: { msg: 'Hi, here\'s your daily content' }},
 		{path: '/link2', component: HomeView, meta: { requiresAuth: true }},
 		{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
 	]

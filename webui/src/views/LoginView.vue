@@ -12,6 +12,7 @@ export default {
 
             this.$user_state.current_view = this.$views.LOGIN;
             this.$user_state.username = null;
+            this.$user_state.headers.Authorization = null;
 
         },
         async login() {
