@@ -60,7 +60,7 @@ export default {
 				return
 			}
 
-			this.$router.push("/profile/" + this.$user_state.username);
+			this.$router.push("/profile")// + this.$user_state.username);
 		},
 
 		async ToStream() {

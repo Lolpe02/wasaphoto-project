@@ -4,6 +4,7 @@ import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
 
 
+
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
 	routes: [
@@ -11,7 +12,7 @@ const router = createRouter({
 		{path: '/login', component: LoginView},
 		{path: '/', component: HomeView, meta: { requiresAuth: true }, props: { msg: 'Hi, here\'s your daily content' }},
 		{path: '/link2', component: HomeView, meta: { requiresAuth: true }},
-		{path: '/profile/:username', component: ProfileView, meta: { requiresAuth: true }},
+		{path: '/profile/', component: ProfileView, meta: { requiresAuth: true }},
 		{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
 	]
 })
