@@ -5,6 +5,8 @@ export default {
             error: false,
             loading: false,
             some_data: null,
+            isAuthenticated: false,
+            $user_state: this.$user_state,
         }
     },
     methods: {
@@ -36,22 +38,17 @@ export default {
                 console.log('Response:', response.data);
             } 
             */
-            try {
-                const jsonString = JSON.stringify(username);
-                
-                let response = await this.$axios.post("/session", 
-                    username, {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'accept': 'application/json',
-                        },
-                    }
-                );
-                console.log('Response:', response.data);
-            } catch (error) {
-                this.errormsg = error.toString();
-                console.error('Error sending request:', error);
+            const jsonString = JSON.stringify(username);
+
+            let response = await this.$axios.post("/session",
+                username, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                },
             }
+            );
+            console.log('Response AND  TYIE:', response.data);
             //check if the response is 201
 
             if (response.status == 201) {
@@ -59,24 +56,25 @@ export default {
                 this.$user_state.headers.Authorization = response.data
                 // new user created
                 alert("Welcome to the community " + username + "!");
-
             } else if (response.status == 200) {
                 // user already exists
+                // get the response body and turn into an integer
+
                 this.$user_state.headers.Authorization = response.data
                 // pop up welcome message
                 alert("Welcome back " + username + "!");
-
             } else {
                 this.error = true;
                 this.$user_state.headers.Authorization = null
+                console.log("Error logging in");
+                this.initialize();
                 return;
             }
             this.$user_state.username = username
             this.isAuthenticated = true;
-            localStorage.setItem("user_state", JSON.stringify(this.$user_state));
+            localStorage.setItem("userToken", JSON.stringify(response.data));
             this.error = false;
-            this.$router.push("/home");
-
+            this.$router.push("/");
         }
     },
     mounted() {
@@ -105,10 +103,6 @@ export default {
         </form>
 
     </div>
-
-
 </template>
 
-<style>
-
-</style>
+<style></style>
