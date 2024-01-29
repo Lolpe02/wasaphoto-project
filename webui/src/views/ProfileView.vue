@@ -20,7 +20,7 @@ export default {
 
             // Redirect to login if not logged in
             if (this.$user_state.username == null) {
-                this.$router.push("/");
+                this.$router.push("/login");
                 return
             }
 
@@ -30,57 +30,19 @@ export default {
 
             this.$user_state.current_view = this.$views.PROFILE;
 
-            // Check if you are banned
-
-            let response = await this.$axios.get("/users/" + this.username + "/bans", {
-                headers: this.$user_state.headers
-            });
-
-            this.has_banned_you = response.data.users.map(x => x["username-string"]).includes(this.$user_state.username);
-
-            // Check if banned
-
-            response = await this.$axios.get("/users/" + this.$user_state.username + "/bans", {
-                headers: this.$user_state.headers
-            });
-
-            this.is_banned = response.data.users.map(x => x["username-string"]).includes(this.username);
-
-            if (!this.has_banned_you) {
-
-                // Get following
-
-                let response = await this.$axios.get("/users/" + this.username + "/following", {
-                    headers: this.$user_state.headers
-                });
-
-
-                this.following = response.data["follow-list"].length;
-
-                // Get followers 
-
-                response = await this.$axios.get("/users/" + this.username + "/followers", {
-                    headers: this.$user_state.headers
-                });
-
-                this.followers = response.data["follow-list"].length;
-
-                if (!this.is_me) {
-
-                    // check if I follow him
-
-                    this.is_following = response.data["follow-list"].map(x => x["username-string"]).includes(this.$user_state.username);
+            // this.has_banned_you = response.data.users.map(x => x["username-string"]).includes(this.$user_state.username);
+            let response = await this.$axios.get("/Users/", {
+                headers: this.$user_state.headers,
+                params: {
+                    "userName": this.$route.params.username
                 }
+            });
 
-                // Get photos
 
-                response = await this.$axios.get("/users/" + this.username + "/profile/photos", {
-                    headers: this.$user_state.headers
-                });
-
-                this.photos = response.data["posts"];
-                this.posts = this.photos.length;
-            }
+            this.following = response.data["followed"].length;
+            this.followers = response.data["following"].length;
+            this.photos = response.data["posted"];
+            this.posts = this.photos.length;
 
         },
 
@@ -98,32 +60,24 @@ export default {
             }
 
 
-            if (!new_name.match("^[a-zA-Z][a-zA-Z0-9_]{2,32}$")) {
-                alert("Invalid username, must respect RegEx: ^[a-zA-Z][a-zA-Z0-9_]{2,32}$ (3 - 32 characters, first character must be a letter, only letters, numbers and underscores allowed)");
+            if (!new_name.match("^.{3,25}$")) {
+                alert("Invalid username");
                 return;
             }
 
-            const req_body = {
-                "username-string": new_name
-            }
-
-            // How do I catch errors here? 400 crashes
-
-            // 
-
-            const res = await this.$axios.put("/users/" + this.$user_state.username + "/profile", req_body, {
-                headers: this.$user_state.headers
+            const res = await this.$axios.patch("/Users/",
+            new_name, {
+                headers: {
+                    "Authorization": this.$user_state.headers.Authorization,
+                    "accept": "application/json",
+                }
             }).catch(err => {
 
-                if (err.response.status == 400) {
-                    alert("Error: " + err.response.data["error-string"]);
+                if (err.response.status == 404) {
+                    alert("either banned by user or not following");
                     return
-                } else if (err.response.status == 401) {
-                    alert("Error: " + err.response.data["error-string"]);
-                    this.$router.push("/");
-                    return
-                } else if (err.response.status == 409) {
-                    alert("Username already taken");
+                } else {
+                    alert("Error: " + err.response.data);
                     return
                 }
 
@@ -142,10 +96,6 @@ export default {
 
                 this.$user_state.username = new_name;
                 this.username = new_name;
-
-                this.$user_state.headers["Authorization"] = res.data.hash;
-
-
                 this.$router.push("/profile/" + new_name);
             });
 
@@ -241,7 +191,7 @@ export default {
             <div class="container text-center pt-3 pb-2 border-bottom">
                 <div class="row w-100 my-3">
                     <h2 class="col-3 text-break d-inline-block" style="vertical-align: middle;">
-                        <i class="bi-person-circle mx-1"></i>{{ username }}'s profile.
+                        <i class="bi-person-circle mx-1"></i>{{this.user_state.username}}'s profile.
                     </h2>
                     <div class="col-9" style="align-items: center; vertical-align: middle;">
                         <div class="row">

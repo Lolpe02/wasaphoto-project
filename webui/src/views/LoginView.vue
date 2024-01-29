@@ -48,7 +48,7 @@ export default {
                 },
             }
             );
-            console.log('Response AND  TYIE:', response.data);
+            console.log('Response:', response.data);
             //check if the response is 201
 
             if (response.status == 201) {
@@ -70,6 +70,7 @@ export default {
                 this.initialize();
                 return;
             }
+            console.log("id: ", this.$user_state.headers.Authorization)
             this.$user_state.username = username
             this.isAuthenticated = true;
             localStorage.setItem("userToken", JSON.stringify(response.data));
