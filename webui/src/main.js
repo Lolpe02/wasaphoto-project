@@ -13,7 +13,8 @@ const app = createApp(App)
 
 var state = {
     headers: {
-        Authorization: null
+        Authorization: null,
+        accept: "application/json",
     },
     username: null,
     viewing: null

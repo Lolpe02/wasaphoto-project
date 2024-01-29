@@ -32,18 +32,49 @@ export default {
 
             // this.has_banned_you = response.data.users.map(x => x["username-string"]).includes(this.$user_state.username);
             let response = await this.$axios.get("/Users/", {
-                headers: this.$user_state.headers,
+                headers: {
+                    "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
                 params: {
                     "userName": this.$route.params.username
                 }
+            }).catch(err => {
+
+                if (err.response.status == 404) {
+                    alert("User not found");
+                    this.$router.push("/");
+                    return
+                } else {
+                    alert("Error: " + err.response.data);
+                    return
+                }
+            }).then(res => {
+
+                if (res == undefined) {
+                    console.log("Error: undefined response");
+                    return
+                }
+
+                if (res.statusText != "OK") {
+                    alert("Error: " + res.statusText);
+                    return
+                }
+                console.log(res, res.data);
+                
             });
+            if (response.data["followed"] != undefined) {
+                this.following = response.data["followed"].length;
 
-
-            this.following = response.data["followed"].length;
-            this.followers = response.data["following"].length;
-            this.photos = response.data["posted"];
-            this.posts = this.photos.length;
-
+            }
+            if (response.data["following"] != undefined) {
+                this.followers = response.data["following"].length;
+            }
+            if (response.data["posted"] != undefined) {
+                this.photos = response.data["posted"];
+                this.posts = this.photos.length;
+            }      
         },
 
         async DeletePost(post_data) {
@@ -191,7 +222,7 @@ export default {
             <div class="container text-center pt-3 pb-2 border-bottom">
                 <div class="row w-100 my-3">
                     <h2 class="col-3 text-break d-inline-block" style="vertical-align: middle;">
-                        <i class="bi-person-circle mx-1"></i>{{this.user_state.username}}'s profile.
+                        <i class="bi-person-circle mx-1"></i>  {{$user_state.username}}'s profile.
                     </h2>
                     <div class="col-9" style="align-items: center; vertical-align: middle;">
                         <div class="row">

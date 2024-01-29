@@ -5,8 +5,8 @@ import { RouterLink, RouterView } from 'vue-router'
 <template>
 
 	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/login">MyWASAPhoto</a>
-		
+		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" >MyWASAPhoto</a>
+		 <!--href="#/login"-->
 		<div class="col-md-10 col-sm-0 text-light text-truncate d-inline-block">
 			<h5 class="">
 				{{
@@ -18,13 +18,13 @@ import { RouterLink, RouterView } from 'vue-router'
 	
 	<div class="container-fluid">
 		<div class="row">
+			<div v-if = "this.$user_state.headers.Authorization != null" class="container-fluid">
 				
 				<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-					<!--<div v-if = "this.$user_state.headers.Authorization != null" class="container-fluid">
-						--><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#Links"
+						<!--<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#Links"
 							aria-controls="Links" aria-expanded="false" aria-label="Toggle navigation">
 							<span class="navbar-toggler-icon"></span>
-						</button>
+						</button>-->
 						<div class="position-sticky pt-3 sidebar-sticky">
 							<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
 								<span>General</span>
@@ -37,9 +37,9 @@ import { RouterLink, RouterView } from 'vue-router'
 									</RouterLink>
 								</li>
 								<li class="nav-item">
-									<RouterLink to="/nothong" + $user_state.username, class="nav-link">
+									<RouterLink to="'/profile/' + 'this.user_state.username'" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
-										Profile not working
+										Profile
 									</RouterLink>
 								</li>
 								<li class="nav-item">
@@ -62,8 +62,9 @@ import { RouterLink, RouterView } from 'vue-router'
 								</li>
 							</ul>
 						</div>
-					<!--</div>-->
+					
 				</nav>
+			</div>
 			<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
 				<RouterView />
 			</main>	
