@@ -16,25 +16,7 @@ const router = createRouter({
 		{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
 	]
 })
-/*
-router.beforeEach((to, next) => {
-	// Check if the route requires authentication
-	if (to.matched.some((record) => record.meta.requiresAuth)) {
-		// Check if the user is authenticated
-		const isAuthenticated = localStorage.getItem('Authorization') != null ? true : false;
 
-		if (!isAuthenticated) {
-			// If not authenticated, redirect to the login page
-			next('/');
-		} else {
-			// If authenticated, proceed to the requested route
-			next();
-		}
-	} else {
-		// If the route doesn't require authentication, proceed
-		next();
-	}
-});*/
 export default router
 /*
 import {createRouter, createWebHashHistory} from 'vue-router'

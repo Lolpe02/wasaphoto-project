@@ -63,14 +63,14 @@ export default {
 			this.$router.push("/profile/" + this.$user_state.username)// ;
 		},
 
-		async ToStream() {
+		/* async ToStream() {
 
 			if (this.$user_state.username == null) {
 				return
 			}
 
 			this.$router.push("/stream/" + this.$user_state.username);
-		},	
+		},	*/
 		
 		async refresh() {
 			if (this.$user_state.username == null) {
@@ -98,6 +98,12 @@ export default {
 		this.refresh()
 	},
 	beforeMount() { // this is a hack to make sure the user is logged in, beforeCreate is not working
+		if (this.$user_state.username == null || this.$user_state.username == undefined) {
+			console.log("Empty username, redirecting to login")
+			this.$router.push("/login");
+		}
+	},
+	beforeCreate() { 
 		if (this.$user_state.username == null || this.$user_state.username == undefined) {
 			console.log("Empty username, redirecting to login")
 			this.$router.push("/login");

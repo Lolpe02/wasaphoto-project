@@ -217,7 +217,7 @@ export default {
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                     }
-                    });
+                });
             }
         },
         async UncommentPhoto() {
