@@ -30,7 +30,7 @@ func (rt *_router) Handler() http.Handler {
 	// New routes
 	rt.router.GET("/Users/profile", rt.getProfile)
 	rt.router.GET("/Users/me/followers/", rt.getFollowersOf)
-	rt.router.GET("/Users/me/following/", rt.getFollowingNames)
+	rt.router.GET("/Users/me/following/", rt.getFollowing)
 	rt.router.GET("/Users/", rt.getInfo)
 	// Special routes
 

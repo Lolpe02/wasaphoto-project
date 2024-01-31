@@ -11,9 +11,9 @@ const router = createRouter({
 		//{path: '/', component: LoginView},
 		{path: '/login', component: LoginView},
 		{path: '/', component: HomeView, meta: { requiresAuth: true }, props: { msg: 'Hi, here\'s your daily content' }},
-		{path: '/link2', component: HomeView, meta: { requiresAuth: true }},
+		//{path: '/link2', component: HomeView, meta: { requiresAuth: true }},
 		{path: '/profile/:username', component: ProfileView, meta: { requiresAuth: true }},
-		{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
+		//{path: '/some/:id/link', component: HomeView, meta: { requiresAuth: true }},
 	]
 })
 

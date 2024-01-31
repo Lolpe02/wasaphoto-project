@@ -404,15 +404,9 @@ paths:
           content:
             application/json:
               schema:
-                description: array of matching names
-                type: array
-                items:
-                  type: object
-                  properties:
-                    userName:
-                      $ref: "#/components/schemas/User/properties/userName"
-                    userId:
-                      $ref: "#/components/schemas/User/properties/userId"
+                description: 'dictionary of tuples {userName:userId}'
+                type: object
+                example: {"SkibidiSigma420":1,"Mogger":2}
                 minItems: 0
                 maxItems: 10000
         "403":

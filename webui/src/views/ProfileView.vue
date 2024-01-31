@@ -33,7 +33,7 @@ export default {
             this.is_me = this.$route.params.username == this.$user_state.username;
             this.$user_state.current_view = this.$views.PROFILE;
             // 
-            await this.$axios.get("/Users/", {
+            let response = await this.$axios.get("/Users/profile", {
                 headers: {
                     "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
                     "accept": "application/json",
@@ -42,64 +42,98 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
-            }).catch(err => {
-                if (err.response.status == 404) {
-                    alert("User not found");
-                    return;
+            })
+            if (response.status == 404) {
+                alert("User not found");
+                return;
+            }
+            else if (response.status == 403) {
+                alert("banned by user");
+                this.has_banned_you = true;
+                return;
+            } else if (response.status != 200) {
+                alert("Error: " + response.data);
+                return;
+            }
+            if (response.data == null) {
+                console.log("Error: undefined response getting profile");
+                return;
+            }
+            if (response.status != 200) {
+                alert("Error: " + response.data);
+                return;
+            };
+            console.log(response.data);
+            if (response.data["posted"] == null) {
+                this.posts = 0;
+            }
+            else {
+                this.photos = response.data["posted"];
+                this.posts = this.photos.length;
+            }
+            this.subscription = this.FormatDate(response.data["date"]);
+            this.their_id = response.data["userId"];
+            let their_name = response.data["userName"];
+            if (their_name != this.$route.params.username) {
+                alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
+                this.$router.push("/login");
+                return;
+            }
+            this.has_banned_you = false;
+            
+            let response1 = await this.$axios.get("/Users/me/following/", {
+                headers: {
+                    "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                params: {
+                    "userName": this.$route.params.username
                 }
-                else if (err.response.status == 403) {
-                    alert("banned by user");
-                    this.has_banned_you = true;
-                    return;
-                } else {
-                    alert("Error: " + err.response.data);
-                    return;
-                }
-            }).then(response => {
-                if (response == undefined || response.data == null) {
-                    console.log("Error: undefined response gettig profile");
-                    return;
-                }
-                if (response.status != 200) {
-                    alert("Error: " + response.data);
-                    return;
-                }
-                console.log(response.data);
-                if (response.data["followed"] == undefined || response.data["followed"] == null) {
-                    this.following = 0;
-                }
-                else {
-                    this.followingList = response.data["followed"];
-                    this.following = response.data["followed"].length;
-                }
-                if (response.data["following"] == undefined || response.data["following"] == null) {
-                    this.followers = 0;
-                }
-                else {
-                    this.followerList = response.data["following"];
-                    this.followers = response.data["following"].length;
-                    this.is_following = this.followerList.includes(this.$user_state.headers.Authorization);
-                }
-                if (response.data["posted"] == undefined || response.data["posted"] == null) {
-                    this.posts = 0;
-                }
-                else {
-                    this.photos = response.data["posted"];
-                    this.posts = this.photos.length;
-                }
-                this.subscription = this.FormatDate(response.data["date"]);
-                this.their_id = response.data["userId"];
-                let their_name = response.data["userName"];
-                if (their_name != this.$route.params.username) {
-                    alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
-                    this.$router.push("/login");
-                    return;
-                }
-                this.has_banned_you = false;
             });
+            console.log("following: ", response1.data)
+            
+            if (response1.status != 200) {
+                alert("Error: " + response1.data);
+                return;
+            }
+            if (response1.data == null) {
+                this.followingList = [];
+                this.following = 0;
+            } else {
+                this.followingList = response1.data;
+                this.following = this.followingList.length;     
+            }
+            let response2 = await this.$axios.get("/Users/me/followers/", {
+                headers: {
+                    "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                params: {
+                    "userName": this.$route.params.username
+                }
+            });
+            console.log("followers: ", response2.data)
+
+            if (response2.status != 200) {
+                alert("Error: " + response2.data);
+                return;
+            }
+            if (response2.data == null) {
+                this.followerList = [];
+                this.followers = 0;
+            } else {
+                this.followerList = response2.data;
+                this.followers = this.followerList.length;
+                this.is_following = this.followerList.includes(this.$user_state.username);
+            }
         },
-        SeeProfile() {
-            console.log("LOOOK HERE: ", this.searchedUser);
+
+        SeeProfile(name, id) {
+            this.search_results = null;
+            this.searchedUser = name
+            console.log("LOOOK HERE: ", this.searchedUser, id);
             this.$router.push("/profile/" + this.searchedUser);
         },
         async PerformSearch() {
@@ -118,7 +152,7 @@ export default {
                     }
                 }).catch(err => {
                     if (err.response.status == 404) {
-                        console.log("User not found");
+                        console.log("Users not found");
                         this.search_results = null;
                     }
                     else if (err.response.status == 403) {
@@ -138,9 +172,7 @@ export default {
                         return;
                     }
                     console.log(response.data);
-                    if (!Array.isArray(response.data)) {
-                        response.data = [response.data];
-                    }      
+                    
                     this.search_results = response.data;
                 });
             }
@@ -159,6 +191,7 @@ export default {
             this.refresh();
         },
         async ChangeName() {
+            console.log("Changing name", this.$user_state.headers.Authorization);
             const new_name = prompt("Set a new name", "Who will you be?");
             if (new_name == null || new_name == "") {
                 return;
@@ -169,8 +202,9 @@ export default {
             }
             await this.$axios.patch("/Users/", new_name, {
                 headers: {
-                    "Authorization": this.$user_state.headers.Authorization,
+                    "Authorization": "Bearer " + this.$user_state.headers.Authorization,
                     "accept": "application/json",
+                    "Content-Type": "application/json",
                 }
             }).catch(err => {
                 if (err.response.status == 404) {
@@ -284,10 +318,19 @@ export default {
     },
     watch: {
         $route(to, from) {
+            console.log("Route changed");
             this.is_me = to.params.username == this.$user_state.username;
-            if (to.params.username != from.params.username) {
-                this.refresh();
-            }
+            this.searchedUser = "";
+            this.search_results = null;
+            this.username = null,
+            this.followerList = [],
+            this.followingList = [],
+            this.has_banned_you = false,
+            this.their_id = null,
+            this.is_following = false,
+            this.is_banned = false,
+            this.refresh();
+            
         }
     }
 }
@@ -301,14 +344,14 @@ export default {
 						disabled: $user_state.username == null, 'd-none': $user_state.username == null
 					}">
 						<input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text" placeholder="Search for your friends (if you have them)" aria-label="Search"
-							@input="PerformSearch()"  >
+							@input="PerformSearch()" v-on:keyup.enter="PerformSearch()" >
 						<!-- Results -->
                             <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
 
-                                <li class=" list-group-item align-middle" v-for="user in search_results"
-                                    :key="user['userName']" @click="SeeProfile">
+                                <li class=" list-group-item align-middle" v-if="search_results" v-for="(userId, userName) in search_results"
+                                    :key="userName"  @click="SeeProfile(userName, userId)">
                                     <i class="bi-person-circle m-1 fa-lg"  style="font-size: 1.0rem;"></i>
-                                    {{ user['userName'] }}                
+                                    {{ userName }}            
                                 </li>
                             </ul>		
 

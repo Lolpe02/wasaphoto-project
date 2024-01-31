@@ -48,6 +48,7 @@ type AppDatabase interface {
 	ChangeUsername(yourUserId int64, newUsername string) (err error)
 	SearchByUsername(targetUser string) (selUserId int64, err error)
 	SearchById(targetUserId int64) (selUserName string, subscription string, err error)
+	GetInfo(targetUserName string) (userIds []int64, usernamesAlike []string, err error)
 	GetProfile(targetUserId int64) (postIds []int64, err error)
 	GetFeed(yourId int64) (postIds []int64, err error)
 	PutLike(targetPost int64, creator int64) (err error)

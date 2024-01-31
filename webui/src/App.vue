@@ -39,13 +39,13 @@ import { RouterLink, RouterView } from 'vue-router'
 									</RouterLink>
 								</li>
 								<li class="nav-item">
-									<RouterLink to="'/profile/' + 'this.user_state.username'" class="nav-link">
+									<RouterLink :to="'/profile/' + this.$user_state.username" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
 										Profile
 									</RouterLink>
 								</li>
 								<li class="nav-item">
-									<RouterLink to="/home" class="nav-link">
+									<RouterLink to="/" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
 										Menu item 2
 									</RouterLink>
@@ -57,10 +57,10 @@ import { RouterLink, RouterView } from 'vue-router'
 							</h6>
 							<ul class="nav flex-column">
 								<li class="nav-item">
-									<RouterLink :to="'/some/' + 'variable_here' + '/path'" class="nav-link">
+									<!--<RouterLink :to="'/some/' + 'variable_here' + '/path'" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#file-text"/></svg>
 										Item 1
-									</RouterLink>
+									</RouterLink>-->
 								</li>
 							</ul>
 						</div>
