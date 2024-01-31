@@ -46,29 +46,20 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 	var followed []int64
-	var present bool
 
-	if followed, present, err = rt.db.GetFolloweds(targetId, yourId); present || yourId == targetId {
-		// you own this profile or you follow it, you can see it
-		if err != nil {
-			// could not get follows, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) // 500
-			err = json.NewEncoder(w).Encode("couldnt search follows")
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError) // 500
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-	} else {
-		// you are not following this person, throw forbidden
-		w.WriteHeader(http.StatusForbidden) // 403
-		err = json.NewEncoder(w).Encode("you are not following this person")
+	followed, _, _, err = rt.db.GetFolloweds(targetId, yourId)
+
+	if err != nil {
+		// could not get follows, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		err = json.NewEncoder(w).Encode("couldnt search follows")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
+
 	var selname, sub string
 	selname, sub, err = rt.db.SearchById(targetId)
 	if err != nil {
@@ -93,7 +84,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 
 		return
 	}
-	follows, _, err := rt.db.GetFollowing(targetId, -1)
+	follows, _, _, err := rt.db.GetFollowing(targetId, -1)
 	if err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500

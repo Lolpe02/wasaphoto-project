@@ -6,17 +6,16 @@ import (
 	// "strings"
 )
 
-// GetFollowing retrieves the list of target user Ids that the specified target user is following,
+// GetFollowing retrieves the list of people ids and names who are following target user Id,
 // along with a boolean indicating whether the test Id is present in the list.
 // It takes the target user Id and the test Id as parameters.
-// It returns the following target user Ids, a boolean indicating presence, and any error encountered.
-func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error) {
+func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, followingTargetNames []string, present bool, err error) {
 	var rows *sql.Rows
 	present = false
-	rows, err = db.c.Query("SELECT following FROM follows WHERE followed = ?;", targetUserId)
+	rows, err = db.c.Query("SELECT follows.following, users.userName FROM follows JOIN users ON follows.following = users.userId WHERE follows.followed = ?;", targetUserId)
 
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	defer rows.Close()
 
@@ -29,7 +28,8 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 
 		// Scan the Id values from each row into variables
 		var followingId int64
-		if err = rows.Scan(&followingId); err != nil {
+		var followingName string
+		if err = rows.Scan(&followingId, &followingName); err != nil {
 			return
 		}
 		if followingId == testId {
@@ -37,12 +37,13 @@ func (db *appdbimpl) GetFollowing(targetUserId int64, testId int64) (followingTa
 		}
 		// Append the retrieved Id to the list
 		followingTargetIds = append(followingTargetIds, followingId)
+		followingTargetNames = append(followingTargetNames, followingName)
 	}
 
 	// Check for errors encountered during iteration
 	err = rows.Err()
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 
 	// Print or use the retrieved Id list

@@ -43,7 +43,7 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	retrieved := post{userId, description, date}
 	var present bool
-	if _, present, err = rt.db.GetFolloweds(retrieved.Creator, yourId); err != nil {
+	if _, _, present, err = rt.db.GetFolloweds(retrieved.Creator, yourId); err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return

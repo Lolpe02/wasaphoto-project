@@ -5,8 +5,12 @@ import { RouterLink, RouterView } from 'vue-router'
 <template>
 
 	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+		
 		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" >MyWASAPhoto</a>
-		 <!--href="#/login"-->
+		 <!--  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#sidebarMenu"
+			aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>   href="#/login"-->
 		<div class="col-md-10 col-sm-0 text-light text-truncate d-inline-block">
 			<h5 class="">
 				{{
@@ -19,12 +23,10 @@ import { RouterLink, RouterView } from 'vue-router'
 	<div class="container-fluid">
 		<div class="row">
 			<div v-if = "this.$user_state.headers.Authorization != null" class="container-fluid">
-				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="sidebarMenu"
-							aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-							<span class="navbar-toggler-icon"></span>
-						</button>
+				
 				<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
 						<!---->
+
 						<div class="position-sticky pt-3 sidebar-sticky">
 							<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
 								<span>General</span>

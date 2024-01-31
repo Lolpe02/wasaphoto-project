@@ -43,7 +43,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 	// check if you are following this person
 	var present bool
-	_, present, err = rt.db.GetFolloweds(creator, yourId)
+	_, _, present, err = rt.db.GetFolloweds(creator, yourId)
 	if err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500

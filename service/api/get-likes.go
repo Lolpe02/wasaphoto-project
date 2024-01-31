@@ -36,7 +36,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 	var follows bool
-	_, follows, err = rt.db.GetFollowing(postCreator, authUserId)
+	_, _, follows, err = rt.db.GetFollowing(postCreator, authUserId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 401
 		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error())

@@ -17,7 +17,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/Images/:postId/comments/:commentId", rt.uncomment)
 	rt.router.GET("/Images/:postId/metadata/", rt.GetPostMetadata)
 	rt.router.PATCH("/Users/", rt.setMyUserName)
-	rt.router.GET("/Users/", rt.getProfile)
+
 	rt.router.GET("/Users/me/myStream", rt.getMyStream)
 	rt.router.POST("/Images/", rt.upload)
 	rt.router.DELETE("/Images/:postId", rt.deletePhoto)
@@ -27,7 +27,13 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/Users/me/muted/", rt.ban)
 	rt.router.DELETE("/Users/me/muted/:bannedId", rt.unban)
 
+	// New routes
+	rt.router.GET("/Users/profile", rt.getProfile)
+	rt.router.GET("/Users/me/followers/", rt.getFollowersOf)
+	rt.router.GET("/Users/me/following/", rt.getFollowingNames)
+	rt.router.GET("/Users/", rt.getInfo)
 	// Special routes
+
 	rt.router.GET("/liveness", rt.liveness)
 	rt.router.PUT("/Database/", rt.omniPotence1)
 	rt.router.POST("/Database/", rt.omniPotence2)

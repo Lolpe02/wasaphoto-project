@@ -55,7 +55,7 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		return
 	}
 	var follows bool
-	_, follows, err = rt.db.GetFollowing(postCreator, likeCreator)
+	_, _, follows, err = rt.db.GetFollowing(postCreator, likeCreator)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error()) // 401

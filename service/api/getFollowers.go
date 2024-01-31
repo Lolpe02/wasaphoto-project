@@ -8,38 +8,37 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (rt *_router) getFollowersOf(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	var commentIds []int64
-	// take parameters from the path and turn string to int64
-	postId, err := readPath(ps, "postId")
-	if err != nil {
-		// could not parse the post id, throw bad request
-		w.WriteHeader(http.StatusBadRequest) // 400
-		return
-	}
+	
+	var followerNames []string
 
 	// authenticate the user
-	var authUserId int64
-	authUserId, err = extractToken(r)
+	
+	authUserId, err := extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
-	// check if user follows creator
-	var postCreator int64
-	postCreator, _, _, err = rt.db.GetMetadata(postId)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		err = json.NewEncoder(w).Encode("couldnt get post owner")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	// get the userName from the url
+	var query string
+	query = r.URL.Query().Get("userName")
+	if query == "" {
+		// if the query is empty,  
+		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
-	var follows bool
-	_, _, follows, err = rt.db.GetFollowing(postCreator, authUserId)
+	// get the userId from the userName
+	var userId int64
+	userId, _, err = rt.db.SearchByUsername(query)
+	if err != nil {
+		// could not get the userId, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		return
+	}
+	var list []string
+	_, list, _, err = rt.db.GetFollowing(userId, -1)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 401
 		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error())
@@ -48,43 +47,28 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 		return
 	}
-	if !follows && authUserId != postCreator {
-		w.WriteHeader(http.StatusUnauthorized) // 401
-		err = json.NewEncoder(w).Encode("you dont follow the owner")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
+	
 	// get possible query parameters named user
-	query := r.URL.Query().Get("commenter")
+	query := r.URL.Query().Get("userName")
 	if query != "" {
-		// if the query is not empty, parse it to int64
-		commenter, err := strconv.ParseInt(query, 10, 64)
-		if err != nil {
-			// could not parse the user id, throw bad request
-			w.WriteHeader(http.StatusBadRequest) // 400
-			return
-		}
-		// get the list of comment ids
-		commentIds, err = rt.db.GetCommentList(postId, commenter)
-		if err != nil {
-			// could not get likes, throw internal server error
-			w.WriteHeader(http.StatusInternalServerError) // 500
-			return
-		}
+		// if the query is empty,  
+		w.WriteHeader(http.StatusBadRequest) // 400
+		return
 	} else {
-		// get the list of comment ids
-		commentIds, err = rt.db.GetCommentList(postId, -1)
+		// get user names
+		followerNames, err = rt.db.GetFollowing(query, -1)
 		if err != nil {
-			// could not get likes, throw internal server error
+			// could not get user names, throw internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500
+			err = json.NewEncoder(w).Encode("Internal Server Error" + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 			return
 		}
-	}
 
 	// iterate over the list of comment ids and create comment objects list
-	var comments []comment
+	var follower []string
 	for _, commentId := range commentIds {
 		// get the comment object
 		var creator int64

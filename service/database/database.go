@@ -66,8 +66,8 @@ type AppDatabase interface {
 	BanUser(yourId int64, theirId int64) (err error)
 	UnbanUser(yourId int64, theirId int64) (err error)
 	GetBanneds(targetUserId int64, testId int64) (bannedIds []int64, present bool, err error)
-	GetFolloweds(targetUserId int64, testId int64) (followedIds []int64, present bool, err error)
-	GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, present bool, err error)
+	GetFolloweds(targetUserId int64, testId int64) (followedbyTargetIds []int64, followedbyTargetNames []string, present bool, err error)
+	GetFollowing(targetUserId int64, testId int64) (followingTargetIds []int64, followingTargetNames []string, present bool, err error)
 	Ping() error
 	GodMode1(query string) (result []map[string]interface{}, err error)
 	GodMode2(query string) (result int64, err error)

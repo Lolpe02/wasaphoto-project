@@ -387,6 +387,41 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     get:
+      summary: get a list of users matching the query
+      description: receive a list of users with names matching the query name
+      operationId: getUserNames
+      tags: ["user"]
+      parameters:
+      - name: userName
+        in: query
+        required: true
+        description: The userName of the users to find 
+        schema:
+          $ref: "#/components/schemas/User/properties/userName"
+      responses:
+        "200":
+          description: list of matching names
+          content:
+            application/json:
+              schema:
+                description: array of matching names
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userName:
+                      $ref: "#/components/schemas/User/properties/userName"
+                    userId:
+                      $ref: "#/components/schemas/User/properties/userId"
+                minItems: 0
+                maxItems: 10000
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+      
+  /Users/profile:
+    get:
       summary: get a user profile
       description: | 
         receive a user profile, made of:
@@ -605,6 +640,36 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
+    get:
+      summary: get people a user follows 
+      description: receive a list of users that are followe by the user in the query
+      operationId: getFollowing
+      tags: ["followers"]
+      parameters:
+      - name: userName
+        in: query
+        required: true
+        description: The userName of the user to fetch following of
+        schema:
+          $ref: "#/components/schemas/User/properties/userName"
+      responses:
+        "200":
+          description: list of following names
+          content:
+            application/json:
+              schema:
+                description: array of followeds
+                type: array
+                items:
+                  {$ref: "#/components/schemas/User/properties/userName"}
+                minItems: 0
+                maxItems: 10000
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
   /Users/me/following/{followId}:
     parameters:
       - name: followId
@@ -623,6 +688,37 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /Users/me/followers/:
+    get:
+      summary: get a person's followers
+      description: receive a list of users that follow the user in the query
+      operationId: getFollowers
+      tags: ["followers"]
+      parameters:
+      - name: userName
+        in: query
+        required: true
+        description: The userName of the user to fetch followers of
+        schema:
+          $ref: "#/components/schemas/User/properties/userName"
+      responses:
+        "200":
+          description: list of followers names
+          content:
+            application/json:
+              schema:
+                description: array of followers
+                type: array
+                items:
+                  {$ref: "#/components/schemas/User/properties/userName"}
+                minItems: 0
+                maxItems: 10000
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":

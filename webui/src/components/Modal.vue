@@ -8,7 +8,7 @@
       
     },
     mounted() {
-      console.log("Modal created");
+      console.log("Modal created, id = " + this.id);
     },
   };
 </script>

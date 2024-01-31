@@ -1,15 +1,15 @@
 <script>
-//import Modal from '../components/Modal.vue';
 export default {
-    
     data: function () {
         return {
-            followers: 1,
+            search_results: null,
+            followers: 0,
             following: 0,
             posts: 0,
             is_me: false,
             is_banned: false,
             is_following: false,
+            searchedUser: "",
             username: null,
             isListVisible: true,
             toorfrom: false,
@@ -19,27 +19,21 @@ export default {
             photos: [], // list of IDs, pairs of ("hash", SHA256 hash of the photo)
             followerList: [],
             followingList: [],
-        }
+        };
     },
     methods: {
         async refresh() {
-
+            console.log("Refreshing profile");
             this.username = this.$route.params.username;
-
             // Redirect to login if not logged in
             if (this.$user_state.username == null) {
                 this.$router.push("/login");
-                return
+                return;
             }
-
-            if (this.$route.params.username == this.$user_state.username) {
-                this.is_me = true;
-            }
-
+            this.is_me = this.$route.params.username == this.$user_state.username;
             this.$user_state.current_view = this.$views.PROFILE;
-
-            // this.has_banned_you = response.data.users.map(x => x["username-string"]).includes(this.$user_state.username);
-            let response = await this.$axios.get("/Users/", {
+            // 
+            await this.$axios.get("/Users/", {
                 headers: {
                     "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
                     "accept": "application/json",
@@ -49,239 +43,281 @@ export default {
                     "userName": this.$route.params.username
                 }
             }).catch(err => {
-
                 if (err.response.status == 404) {
                     alert("User not found");
-                    this.$router.push("/");
-                    return
+                    return;
+                }
+                else if (err.response.status == 403) {
+                    alert("banned by user");
+                    this.has_banned_you = true;
+                    return;
                 } else {
                     alert("Error: " + err.response.data);
-                    return
+                    return;
                 }
             }).then(response => {
-
                 if (response == undefined || response.data == null) {
                     console.log("Error: undefined response gettig profile");
-                    return
+                    return;
                 }
-
                 if (response.status != 200) {
                     alert("Error: " + response.data);
-                    return
+                    return;
                 }
                 console.log(response.data);
                 if (response.data["followed"] == undefined || response.data["followed"] == null) {
                     this.following = 0;
-                } else {
+                }
+                else {
                     this.followingList = response.data["followed"];
                     this.following = response.data["followed"].length;
                 }
                 if (response.data["following"] == undefined || response.data["following"] == null) {
                     this.followers = 0;
-                } else {
+                }
+                else {
                     this.followerList = response.data["following"];
                     this.followers = response.data["following"].length;
+                    this.is_following = this.followerList.includes(this.$user_state.headers.Authorization);
                 }
                 if (response.data["posted"] == undefined || response.data["posted"] == null) {
                     this.posts = 0;
-                } else {
+                }
+                else {
                     this.photos = response.data["posted"];
                     this.posts = this.photos.length;
                 }
-                this.subscription = this.FormatDate(response.data["date"]);     
+                this.subscription = this.FormatDate(response.data["date"]);
                 this.their_id = response.data["userId"];
-                if (this.their_id == this.$route.params.username) {
-                    alert("WHAT HAPPENED?");
-                    return
+                let their_name = response.data["userName"];
+                if (their_name != this.$route.params.username) {
+                    alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
+                    this.$router.push("/login");
+                    return;
                 }
-
-                this.is_following = true;
                 this.has_banned_you = false;
             });
-            
         },
-        
-        async ToggleVisibility(listype) {
-            this.isListVisible = !this.isListVisible;
-            console.log(this.isListVisible),
-            this.toorfrom = listype;
+        SeeProfile() {
+            console.log("LOOOK HERE: ", this.searchedUser);
+            this.$router.push("/profile/" + this.searchedUser);
         },
+        async PerformSearch() {
+            let search = document.querySelector("input").value;
+            search = search.trim();
+            if (search.length > 2 && search.match("^.{3,25}$")) {
 
+                await this.$axios.get("/Users/", {
+                    headers: {
+                        "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
+                        "accept": "application/json",
+                        "Content-Type": "application/json",
+                    },
+                    params: {
+                        "userName": search
+                    }
+                }).catch(err => {
+                    if (err.response.status == 404) {
+                        console.log("User not found");
+                        this.search_results = null;
+                    }
+                    else if (err.response.status == 403) {
+                        console.log("banned by user");
+                        this.search_results = null;
+                    } else {
+                        alert("Error: " + err.response.data);
+                        return;
+                    }
+                }).then(response => {
+                    if (response == undefined || response.data == null) {
+                        console.log("Error: undefined response getting profile");
+                        return;
+                    }
+                    if (response.status != 200) {
+                        alert("Error: " + response.data);
+                        return;
+                    }
+                    console.log(response.data);
+                    if (!Array.isArray(response.data)) {
+                        response.data = [response.data];
+                    }      
+                    this.search_results = response.data;
+                });
+            }
+            else {
+                this.search_results = null;
+            }
+        },
         FormatDate(datestamp) {
             let datetime = datestamp.split("T");
             let date = datetime[0].split("-");
             let time = datetime[1].split(":");
             time = time[0] + ":" + time[1];
             return date[2] + "/" + date[1] + "/" + date[0] + " at " + time;
-		},
-
+        },
         async DeletePost(post_data) {
-
             this.refresh();
         },
-
         async ChangeName() {
-
             const new_name = prompt("Set a new name", "Who will you be?");
-
             if (new_name == null || new_name == "") {
-                return
+                return;
             }
-
-
             if (!new_name.match("^.{3,25}$")) {
                 alert("Invalid username");
                 return;
             }
-
-            const res = await this.$axios.patch("/Users/",
-            new_name, {
+            await this.$axios.patch("/Users/", new_name, {
                 headers: {
                     "Authorization": this.$user_state.headers.Authorization,
                     "accept": "application/json",
                 }
             }).catch(err => {
-
                 if (err.response.status == 404) {
                     alert("either banned by user or not following");
-                    return
-                } else {
-                    alert("Error: " + err.response.data);
-                    return
+                    return;
                 }
-
-                return
+                else {
+                    alert("Error: " + err.response.data);
+                    return;
+                }
             }).then(res => {
-
                 if (res == undefined) {
                     console.log("Error: undefined response");
-                    return
+                    return;
                 }
-
                 if (res.statusText != "OK") {
                     alert("Error: " + res.statusText);
-                    return
+                    return;
                 }
-
                 this.$user_state.username = new_name;
                 this.username = new_name;
                 this.$router.push("/profile/" + new_name);
             });
-
         },
-
         async Follow() {
-            let response = await this.$axios.post("/Users/me/following/",
-                this.$user_state.username, {
+            let response = await this.$axios.post("/Users/me/following/", this.their_id, {
                 headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
             });
-
             if (response.status == 404) {
                 alert("Error: " + response.statusText);
-                return
-            } else if (response.status == 403) {
-                alert("Error: " + response.statusText);
-                $router.push("/login");
-                return
-            } else if (response.status == 201) {
-                alert("Now following user");
-            } else if (response.status == 200) {
-                alert("Already followed user");
-            } else {
-                alert("Error: " + response.statusText);
-                return
+                return;
             }
-
+            else if (response.status == 403) {
+                alert("Error: " + response.statusText);
+                return;
+            }
+            else if (response.status == 201) {
+                alert("Now following user");
+            }
+            else if (response.status == 200) {
+                alert("Already followed user");
+                return;
+            }
+            else {
+                alert("Error: " + response.statusText);
+                return;
+            }
             this.is_following = true;
             this.followers += 1;
         },
-
         async Unfollow() {
-
             if (!this.is_following) {
-                return
+                return;
             }
-
-            let response = await this.$axios.delete("/Users/me/following/" + user_id,
-                    {
-                    headers: {
+            let response = await this.$axios.delete("/Users/me/following/" + this.their_id, {
+                headers: {
                     'Content-Type': 'application/json',
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                    }
-                });
-
+                }
+            });
             if (response.status != 200) {
-
                 alert("Error: " + response.data);
-                return
+                return;
             }
-
             this.is_following = false;
             this.followers -= 1;
         },
-
         async Ban() {
-
-            let response = await this.$axios.post("/Users/me/muted/", 
-                user_id, {
-				headers: {
-					'Content-Type': 'application/json',
-					'accept': 'application/json',
-					'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-				}});
-
-            if (response.status == 200 ) {
-                alert("Already banned user");
-            } else if (response.status == 201) {
-                alert("Now banned user");
-            } else {
-                alert("Error: " + response.data);
-                return
-            }
-
-            this.is_banned = true;
-        },
-
-        async UnBan() {
-
-            let response = await this.$axios.delete("/Users/me/muted/" + user_id,
-                    {
-                    headers: {
+            let response = await this.$axios.post("/Users/me/muted/", this.their_id, {
+                headers: {
                     'Content-Type': 'application/json',
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                    }
-                });
-
+                }
+            });
+            if (response.status == 200) {
+                alert("Already banned user");
+            }
+            else if (response.status == 201) {
+                alert("Now banned user");
+            }
+            else {
+                alert("Error: " + response.data);
+                return;
+            }
+            this.is_banned = true;
+        },
+        async UnBan() {
+            let response = await this.$axios.delete("/Users/me/muted/" + this.their_id, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                }
+            });
             if (response.status != 200) {
                 alert("Error: " + response.data);
-                return
+                return;
             }
-
             this.is_banned = false;
-
         },
-
+        
     },
-
     mounted() {
-        this.refresh()
+        this.refresh();
+    },
+    watch: {
+        $route(to, from) {
+            this.is_me = to.params.username == this.$user_state.username;
+            if (to.params.username != from.params.username) {
+                this.refresh();
+            }
+        }
     }
 }
 </script>
 
 <template>
     <div class="container">
-        <div class="align-items-center text-center h-100">
+        <div class="align-items-center text-center h-80">
+            <div class="col-md-12 col-sm-6">
+					<form class="nav form-inline my-2 my-md-0" :class="{
+						disabled: $user_state.username == null, 'd-none': $user_state.username == null
+					}">
+						<input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text" placeholder="Search for your friends (if you have them)" aria-label="Search"
+							@input="PerformSearch()"  >
+						<!-- Results -->
+                            <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
+
+                                <li class=" list-group-item align-middle" v-for="user in search_results"
+                                    :key="user['userName']" @click="SeeProfile">
+                                    <i class="bi-person-circle m-1 fa-lg"  style="font-size: 1.0rem;"></i>
+                                    {{ user['userName'] }}                
+                                </li>
+                            </ul>		
+
+					</form>
+				</div>
             <div class="container text-center pt-3 pb-2 border-bottom">
                 <div class="row w-80 my-3">
                     <h2 class="col-3 text-break d-inline-block" style="vertical-align: bottom;">
-                        <i class="bi-person-circle mx-1"></i>  {{$user_state.username}}'s profile.
+                        <i class="bi-person-circle mx-1"></i>  {{this.username}}'s profile.
                     </h2>
                     <div class="col-9" style="align-items: center; vertical-align: middle;">
                         <div class="row">
@@ -323,7 +359,7 @@ export default {
                         </div>
                     </div>
                 </div>
-                <div v-if="is_me" class="row w-100">
+                <div v-if="this.is_me" class="row w-100">
                     <div class="row w-100">
                         <div class="col-3">
                             <button class="btn btn-primary btn-md" type="button" @click="ChangeName()">

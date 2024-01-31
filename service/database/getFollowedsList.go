@@ -10,10 +10,10 @@ import (
 // It takes the target user Id and a test Id as parameters.
 // It returns the list of followed user Ids, a boolean indicating if the test Id is present in the list,
 // and an error if any occurred during the database query or iteration.
-func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyTargetIds []int64, present bool, err error) {
+func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyTargetIds []int64, followedbyTargetNames []string, present bool, err error) {
 	var rows *sql.Rows
 	present = false
-	rows, err = db.c.Query("SELECT followed FROM follows WHERE following = ?;", targetUserId)
+	rows, err = db.c.Query("SELECT follows.followed, users.userName FROM follows JOIN users ON follows.followed = users.userId WHERE following = ?;", targetUserId)
 
 	if err != nil {
 		return
@@ -29,7 +29,8 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 
 		// Scan the Id values from each row into variables
 		var followedId int64
-		if err = rows.Scan(&followedId); err != nil {
+		var followedName string
+		if err = rows.Scan(&followedId, &followedName); err != nil {
 			return
 		}
 		if followedId == testId {
@@ -37,6 +38,7 @@ func (db *appdbimpl) GetFolloweds(targetUserId int64, testId int64) (followedbyT
 		}
 		// Append the retrieved Id to the list
 		followedbyTargetIds = append(followedbyTargetIds, followedId)
+		followedbyTargetNames = append(followedbyTargetNames, followedName)
 
 	}
 
