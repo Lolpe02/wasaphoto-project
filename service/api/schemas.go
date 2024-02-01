@@ -9,7 +9,8 @@ type user struct {
 	Followed []int64 `json:"followed"`
 }
 type post struct {
-	Creator int64  `json:"userId"`
+	UserId  int64  `json:"creatorId"`
+	Creator string `json:"creatorName"`
 	Desc    string `json:"description"`
 	Date    string `json:"date"`
 }

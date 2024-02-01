@@ -43,7 +43,6 @@ export default {
 			}
 			this.loading = true;
 			this.errormsg = null;
-			console.log("Refreshing", this.$user_state.headers.Authorization)
 			let response = await this.$axios.get("/Users/me/myStream",
 				{
 					headers: {
@@ -53,7 +52,6 @@ export default {
 					},
 				});
 			this.some_data = response.data;
-			console.log('Response: ', response.data);
 			this.loading = false;
 		},
 	},
@@ -62,13 +60,13 @@ export default {
 	},
 	beforeMount() { // this is a hack to make sure the user is logged in, beforeCreate is not working
 		if (this.$user_state.username == null || this.$user_state.username == undefined) {
-			console.log("Empty username, redirecting to login")
+			console.log("Empty username before mount, redirecting to login")
 			this.$router.push("/login");
 		}
 	},
 	beforeCreate() { 
 		if (this.$user_state.username == null || this.$user_state.username == undefined) {
-			console.log("Empty username, redirecting to login")
+			console.log("Empty username before create, redirecting to login")
 			this.$router.push("/login");
 		}
 	},

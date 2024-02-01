@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: api for "WasaPhoto" project
 #servers:
-#  - url: htBUBBAtp://lomalhost:30O0
+#  - url: http://loc/alhost:30/00
 #    description: Local server
 tags:
   - name: user 
@@ -412,8 +412,7 @@ paths:
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "500":
-          $ref: "#/components/responses/ServerError"
-      
+          $ref: "#/components/responses/ServerError"    
   /Users/profile:
     get:
       summary: get a user profile
@@ -583,11 +582,13 @@ paths:
           content:
             application/json:
               schema:
-                description: post metadata object (creator, description, date)
+                description: post metadata object (creatorId, name, description, date)
                 type: object
                 properties:
                   creatorId:
                     $ref: "#/components/schemas/identifier"
+                  creatorName:
+                    $ref: "#/components/schemas/User/properties/userName"
                   description:
                     description: user's caption for the post
                     type: string
@@ -628,6 +629,8 @@ paths:
           $ref: "#/components/responses/OkDone"
         "201":
           $ref: "#/components/responses/OkDone"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "404":

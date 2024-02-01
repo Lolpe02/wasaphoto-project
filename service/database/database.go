@@ -60,7 +60,7 @@ type AppDatabase interface {
 	GetComment(commentId int64) (creator int64, postId int64, content string, date string, err error)
 	CreatePost(image *multipart.File, desc *string, enc string, creator int64) (postId int64, err error)
 	Unpost(creator int64, postId int64) (err error)
-	GetPost(postId int64) (imagepointer *os.File, imageBytes *[]byte, err error)
+	GetPost(postId int64) (imagepointer *os.File, imageBytes *[]byte, format string, err error)
 	GetMetadata(postId int64) (userId int64, description string, date string, err error)
 	FollowUser(yourId int64, theirId int64) (alreadyExists bool, err error)
 	UnfollowUser(yourId int64, theirId int64) (err error)

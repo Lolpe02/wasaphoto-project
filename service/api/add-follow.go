@@ -31,25 +31,16 @@ func (rt *_router) follow(w http.ResponseWriter, r *http.Request, ps httprouter.
 	var exists bool
 	exists, err = rt.db.FollowUser(follow.FollowingId, follow.FollowedId)
 	if err != nil {
-		if err.Error() == NotFound {
-			// could not follow, throw not found
-			w.WriteHeader(http.StatusNotFound) // 404
-			err = json.NewEncoder(w).Encode("could not follow user, it doesnt exists " + err.Error())
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError) // 500
-				return
-			}
-			return
-		} else if err.Error() == "banned by this user" {
+		if err.Error() == "banned by this user" {
 			// could not follow, throw not found
 			w.WriteHeader(http.StatusForbidden) // 403
-			err = json.NewEncoder(w).Encode("could not follow user, you are banned " + err.Error())
+			err = json.NewEncoder(w).Encode("could not follow user, you are banned, " + err.Error())
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 				return
 			}
 			return
-		} else if err.Error() == "FOREIGN KEY constraint failed" {
+		} else if err.Error() == FKviolation {
 			// could not follow, throw not found
 			w.WriteHeader(http.StatusNotFound) // 404
 			err = json.NewEncoder(w).Encode("could not follow user, it doesnt exists " + err.Error())

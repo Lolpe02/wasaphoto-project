@@ -17,8 +17,7 @@ func (rt *_router) getInfo(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	// get the user from the query
-	var targetUser string
-	targetUser = r.URL.Query().Get("userName")
+	targetUser := r.URL.Query().Get("userName")
 	if targetUser == "" {
 		// no user specified, throw bad request
 		w.WriteHeader(http.StatusBadRequest) // 400

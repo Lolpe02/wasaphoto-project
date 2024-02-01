@@ -5,6 +5,8 @@ import axios from './services/axios.js';
 import ErrorMsg from './components/ErrorMsg.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import Stream from './components/Stream.vue'
+import Photo from './components/Photo.vue'
+import PhotoPost from './components/PhotoPost.vue'
 import Modal from './components/Modal.vue'
 import requests from './views/requests.vue'
 
@@ -36,6 +38,8 @@ app.component("LoadingSpinner", LoadingSpinner);
 app.component("requests", requests);
 app.component("Modal", Modal);
 app.component("Stream", Stream);
+app.component("Photo", Photo);
+app.component("PhotoPost", PhotoPost);
 
 app.use(router)
 app.mount('#app')
@@ -44,8 +48,7 @@ app.mount('#app')
 
 import Comment from './components/Comment.vue'
 import LikeCounter from './components/LikeCounter.vue'
-import Photo from './components/Photo.vue'
-import PhotoPost from './components/PhotoPost.vue'
+
 import CommentWriter from './components/CommentWriter.vue'
 
 import './assets/dashboard.css'
@@ -72,8 +75,7 @@ app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
 app.component("Comment", Comment);
 app.component("LikeCounter", LikeCounter);
-app.component("Photo", Photo);
-app.component("PhotoPost", PhotoPost);
+
 app.component("CommentWriter", CommentWriter);
 
 app.use(router)

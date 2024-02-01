@@ -22,8 +22,7 @@ func (rt *_router) getFollowing(w http.ResponseWriter, r *http.Request, ps httpr
 	// if the user is not authenticated, throw unauthorized
 
 	// get the userName from the url
-	var query string
-	query = r.URL.Query().Get("userName")
+	query := r.URL.Query().Get("userName")
 	if query == "" {
 		// if the query is empty,
 		w.WriteHeader(http.StatusBadRequest) // 400

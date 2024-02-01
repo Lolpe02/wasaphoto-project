@@ -9,27 +9,28 @@ import (
 	// "strings"
 )
 
-func (db *appdbimpl) GetPost(postId int64) (imagepointer *os.File, imageBytes *[]byte, err error) {
+func (db *appdbimpl) GetPost(postId int64) (imagepointer *os.File, imageBytes *[]byte, format string, err error) {
 	// Retrieve the imageId from the database
 	_, _, _, err = db.GetMetadata(postId)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
-	var path = os.TempDir() + "/" + strconv.FormatInt(postId, 10)
+	var path = os.TempDir() + "/wasaPhotos/" + strconv.FormatInt(postId, 10)
 	var names []string
 	names, err = filepath.Glob(path + ".*")
 	if err != nil || names == nil || len(names) == 0 {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	// read file and send it to the client
-	imagepointer, err = os.Open(path + "." + strings.Split(names[0], ".")[1])
+	format = strings.Split(names[0], ".")[1]
+	imagepointer, err = os.Open(path + "." + format)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	var imageBytesOb []byte
 	imageBytesOb, err = os.ReadFile(path + "." + strings.Split(names[0], ".")[1])
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	imageBytes = &imageBytesOb
 	return

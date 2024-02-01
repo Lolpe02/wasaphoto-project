@@ -2,6 +2,21 @@
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 
+<script>
+export default {
+	methods: {
+		async Logout() {
+			this.$user_state.username = null;
+			this.$user_state.headers.Authorization = null;
+			
+			console.log("Logging out");
+			this.$router.push("/");
+		},
+	},
+};
+			
+</script>
+
 <template>
 
 	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
@@ -44,10 +59,10 @@ import { RouterLink, RouterView } from 'vue-router'
 										Profile
 									</RouterLink>
 								</li>
-								<li class="nav-item">
+								<li class="nav-item" @click="Logout()">
 									<RouterLink to="/" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
-										Menu item 2
+										Logout
 									</RouterLink>
 								</li>
 							</ul>

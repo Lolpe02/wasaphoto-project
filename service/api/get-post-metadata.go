@@ -19,8 +19,7 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	// you can see this person's photo only if you follow them
-	var yourId int64
-	yourId, err = extractToken(r)
+	_, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
@@ -41,8 +40,16 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	retrieved := post{userId, description, date}
-	var present bool
+	//get userName from userId
+	var userName string
+	userName, _, err = rt.db.SearchById(userId)
+	if err != nil {
+		// could not get creator, throw internal server error
+		w.WriteHeader(http.StatusInternalServerError) // 500
+		return
+	}
+	retrieved := post{userId, userName, description, date}
+	/* var present bool
 	if _, _, present, err = rt.db.GetFolloweds(retrieved.Creator, yourId); err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
@@ -53,7 +60,7 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 		// you are not following this person, throw forbidden
 		w.WriteHeader(http.StatusForbidden) // 403
 		return
-	}
+	} */
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) // 200

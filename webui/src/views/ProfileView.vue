@@ -33,7 +33,7 @@ export default {
             this.is_me = this.$route.params.username == this.$user_state.username;
             this.$user_state.current_view = this.$views.PROFILE;
             // 
-            let response = await this.$axios.get("/Users/profile", {
+            await this.$axios.get("/Users/profile", {
                 headers: {
                     "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
                     "accept": "application/json",
@@ -42,69 +42,44 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
-            })
-            if (response.status == 404) {
-                alert("User not found");
-                return;
-            }
-            else if (response.status == 403) {
-                alert("banned by user");
-                this.has_banned_you = true;
-                return;
-            } else if (response.status != 200) {
-                alert("Error: " + response.data);
-                return;
-            }
-            if (response.data == null) {
-                console.log("Error: undefined response getting profile");
-                return;
-            }
-            if (response.status != 200) {
-                alert("Error: " + response.data);
-                return;
-            };
-            console.log(response.data);
-            if (response.data["posted"] == null) {
-                this.posts = 0;
-            }
-            else {
-                this.photos = response.data["posted"];
-                this.posts = this.photos.length;
-            }
-            this.subscription = this.FormatDate(response.data["date"]);
-            this.their_id = response.data["userId"];
-            let their_name = response.data["userName"];
-            if (their_name != this.$route.params.username) {
-                alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
-                this.$router.push("/login");
-                return;
-            }
-            this.has_banned_you = false;
-            
-            let response1 = await this.$axios.get("/Users/me/following/", {
-                headers: {
-                    "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
-                    "accept": "application/json",
-                    "Content-Type": "application/json",
-                },
-                params: {
-                    "userName": this.$route.params.username
+            }).catch(err => {
+                if (err.response.status == 400) {
+                    alert("Error: " + err.response.data);
+                    return;}
+                else if (err.response.status == 404) {
+                    console.log("Users not found");
+                    this.search_results = null;
+                }
+                else if (err.response.status == 403) {
+                    console.log("banned by user");
+                    this.has_banned_you = true;
+                    this.search_results = null;
+                    return
+                } else {
+                    alert("Error: " + err.response.data);
+                    return;
+                }
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    console.log("Error: undefined response getting profile");
+                    return;
+                }                
+                if (response.data["posted"] == null) {
+                    this.posts = 0;
+                } else {
+                    this.photos = response.data["posted"];
+                    this.posts = this.photos.length;
+                    this.subscription = this.FormatDate(response.data["date"]);
+                    this.their_id = response.data["userId"];
+                    let their_name = response.data["userName"];
+                    if (their_name != this.$route.params.username) {
+                        alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
+                        this.$router.push("/login");
+                        return;
+                    }   
                 }
             });
-            console.log("following: ", response1.data)
-            
-            if (response1.status != 200) {
-                alert("Error: " + response1.data);
-                return;
-            }
-            if (response1.data == null) {
-                this.followingList = [];
-                this.following = 0;
-            } else {
-                this.followingList = response1.data;
-                this.following = this.followingList.length;     
-            }
-            let response2 = await this.$axios.get("/Users/me/followers/", {
+            await this.$axios.get("/Users/me/following/", {
                 headers: {
                     "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
                     "accept": "application/json",
@@ -113,23 +88,63 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
+            }).catch(err => {
+                if (err.response.status == 404) {
+                    console.log("Users not found");
+                    this.search_results = null;
+                }
+                else if (err.response.status == 403) {
+                    console.log("banned by user");
+                    this.has_banned_you = true;
+                    this.search_results = null;
+                } else {
+                    alert("Error: " + err.response.data);
+                    return;
+                }
+            }).then(response => {
+                if (response.data == null || response.data == undefined) {
+                    this.followingList = [];
+                    this.following = 0;
+                } else {
+                    this.followingList = response.data;
+                    this.following = this.followingList.length;     
+                }
             });
-            console.log("followers: ", response2.data)
-
-            if (response2.status != 200) {
-                alert("Error: " + response2.data);
-                return;
+            await this.$axios.get("/Users/me/followers/", {
+                headers: {
+                    "Authorization": 'Bearer ' + this.$user_state.headers.Authorization,
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                params: {
+                    "userName": this.$route.params.username
+                }
+            }).catch(
+                err => {
+                    if (err.response.status == 404) {
+                        console.log("Users not found");
+                        this.search_results = null;
+                    }
+                    else if (err.response.status == 403) {
+                        console.log("banned by user");
+                        this.has_banned_you = true;
+                        this.search_results = null;
+                    } else {
+                        alert("Error: " + err.response.data);
+                        return;
+                    }
+                }).then(response => {
+                    if (response.data == null || response.data == undefined) {
+                        this.followerList = [];
+                        this.followers = 0;
+                    } else {
+                        this.followerList = response.data;
+                        this.followers = this.followerList.length;
+                        this.is_following = this.followerList.includes(this.$user_state.username);
+                    }
             }
-            if (response2.data == null) {
-                this.followerList = [];
-                this.followers = 0;
-            } else {
-                this.followerList = response2.data;
-                this.followers = this.followerList.length;
-                this.is_following = this.followerList.includes(this.$user_state.username);
-            }
+            );
         },
-
         SeeProfile(name, id) {
             this.search_results = null;
             this.searchedUser = name
@@ -230,34 +245,45 @@ export default {
             });
         },
         async Follow() {
-            let response = await this.$axios.post("/Users/me/following/", this.their_id, {
+            let response = await this.$axios.post("/Users/me/following/",
+                this.their_id, {
                 headers: {
                     'Content-Type': 'application/json',
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
-            });
-            if (response.status == 404) {
-                alert("Error: " + response.statusText);
-                return;
-            }
-            else if (response.status == 403) {
-                alert("Error: " + response.statusText);
-                return;
-            }
-            else if (response.status == 201) {
+            }).catch(err => {
+                if (err.response.status == 401) {
+                    alert("Error: " + err.response.data);
+                    this.$router.push("/login");
+                    return;
+                } else if (err.response.status == 403) {
+                    this.has_banned_you = true;
+                    alert("Banned by " + this.username);
+                    return;
+                } else if (err.response.status == 404) {
+                    alert("Error: " + err.response.data);
+                    return;
+                } else {
+                    alert("Error: " + err.response.data);
+                    return;
+                }
+            }).then(res => {
+                if (res.status == 201) {
                 alert("Now following user");
             }
-            else if (response.status == 200) {
+            else if (res.status == 200) {
                 alert("Already followed user");
                 return;
             }
             else {
-                alert("Error: " + response.statusText);
+                alert("Error: " + res.data);
                 return;
             }
             this.is_following = true;
             this.followers += 1;
+            });
+            
         },
         async Unfollow() {
             if (!this.is_following) {
@@ -319,18 +345,19 @@ export default {
     watch: {
         $route(to, from) {
             console.log("Route changed");
+            if (to.params.username != from.params.username) {
+                this.has_banned_you = false,
+                this.their_id = null,
+                this.is_following = false,
+                this.is_banned = false,
+                this.followerList = [],
+                this.followingList = [],
+                this.username = null
+            };
             this.is_me = to.params.username == this.$user_state.username;
             this.searchedUser = "";
             this.search_results = null;
-            this.username = null,
-            this.followerList = [],
-            this.followingList = [],
-            this.has_banned_you = false,
-            this.their_id = null,
-            this.is_following = false,
-            this.is_banned = false,
             this.refresh();
-            
         }
     }
 }
@@ -462,7 +489,7 @@ export default {
                     <p>Sorry, but you have been banned from this user's profile. You cannot view their posts or
                         interact with them.</p>
                     <hr>
-                    <p class="mb-0">Try not to be so mean next time!</p>
+                    <p class="mb-0"></p>
                 </div>
             </div>
         </div>
@@ -471,6 +498,7 @@ export default {
         <Stream :posts="photos" @delete-post="DeletePost" :key="photos.length"></Stream><!---->
     </div>
     <!--  v-if="isListVisible" -->
+
     <Modal id="ciao">
             <!---->
             <template v-if="toorfrom" v-slot:header>

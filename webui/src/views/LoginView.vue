@@ -38,44 +38,39 @@ export default {
                 console.log('Response:', response.data);
             } 
             */
-            const jsonString = JSON.stringify(username);
-
-            let response = await this.$axios.post("/session",
+            await this.$axios.post("/session",
                 username, {
                 headers: {
                     'Content-Type': 'application/json',
                     'accept': 'application/json',
                 },
             }
-            );
-            console.log('Response:', response.data);
-            //check if the response is 201
-
-            if (response.status == 201) {
-                // get the response body               
-                this.$user_state.headers.Authorization = response.data
-                // new user created
-                alert("Welcome to the community " + username + "!");
-            } else if (response.status == 200) {
-                // user already exists
-                // get the response body and turn into an integer
-
-                this.$user_state.headers.Authorization = response.data
-                // pop up welcome message
-                alert("Welcome back " + username + "!");
-            } else {
+            ).catch((error) => {
+                if (error.response.status == 400) {
+                    alert("Invalid username");
+                    return;
+                }
                 this.error = true;
                 this.$user_state.headers.Authorization = null
                 console.log("Error logging in");
                 this.initialize();
                 return;
-            }
-            console.log("id: ", this.$user_state.headers.Authorization)
-            this.$user_state.username = username
-            this.isAuthenticated = true;
-            localStorage.setItem("userToken", JSON.stringify(response.data));
-            this.error = false;
-            this.$router.push("/");
+            }).then((response) => {
+                
+                 if (response.status == 201) {
+                    // new user created
+                    alert("Welcome to the community " + username + "!");
+                } else if (response.status == 200) {
+                    // user already exists
+                    alert("Welcome back " + username + "!");
+                }
+                this.$user_state.headers.Authorization = response.data
+                this.$user_state.username = username
+                this.isAuthenticated = true;
+                // localStorage.setItem("userToken", JSON.stringify(response.data));
+                this.error = false;
+                this.$router.push("/");
+                });
         }
     },
     mounted() {

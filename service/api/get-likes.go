@@ -17,15 +17,14 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 	// authenticate the user
-	var authUserId int64
-	authUserId, err = extractToken(r)
+	_, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 	// check if user follows creator
-	var postCreator int64
+	/* var postCreator int64
 	postCreator, _, _, err = rt.db.GetMetadata(postId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -52,7 +51,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
-	}
+	} */
 	userIds, err = rt.db.GetLikes(postId)
 	if err != nil {
 		// could not get likes, throw internal server error

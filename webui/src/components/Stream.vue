@@ -3,7 +3,7 @@ export default {
 
     props: {
         posts: {
-            type: Object // Photoposts to display
+            type: Array
         }
     },
 
@@ -46,7 +46,7 @@ export default {
 
 <template>
 
-    <div v-for="post in posts_" :key="post.id" class="m-1">
+    <div v-for="post in posts_" :key="post" class="m-1">
         <PhotoPost :post_data="post" @delete-post="RemovePost" />
     </div>
 

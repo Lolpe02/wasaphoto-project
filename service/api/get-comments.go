@@ -20,15 +20,14 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// authenticate the user
-	var authUserId int64
-	authUserId, err = extractToken(r)
+	_, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 	// check if user follows creator
-	var postCreator int64
+	/* var postCreator int64
 	postCreator, _, _, err = rt.db.GetMetadata(postId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,7 +54,7 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
-	}
+	} */
 	// get possible query parameters named user
 	query := r.URL.Query().Get("commenter")
 	if query != "" {
