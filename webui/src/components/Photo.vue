@@ -20,6 +20,7 @@ export default {
             src_: null,
             alt_: null,
             style_: null,
+            isModalOpen: false
         }
     },
 
@@ -57,7 +58,16 @@ export default {
                 this.src_ = URL.createObjectURL(blob)
                 this.is_loading = false;
             });
-        }
+        },
+        ToggleModal() {
+            this.isModalOpen = !this.isModalOpen;
+            if (document.body.style.overflow == "auto") {
+                document.body.style.overflow = "hidden"; // Disable scrolling
+            } else if (document.body.style.overflow == "hidden") {
+                document.body.style.overflow = "auto"; // Enable scrolling}
+            }
+            console.log(this.isModalOpen)
+        },
 
     },
     mounted() {
@@ -76,14 +86,32 @@ export default {
 
     <div v-if="!is_loading">
         <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
-            :style="(style_ != null ? style_ : '')" />
+            :style="(style_ != null ? style_ : '')" @click="ToggleModal"/>
+        <div v-if="this.isModalOpen" class="modal">
+            <img :src="src_" class="modal-content" @click="ToggleModal"/>
+        </div>
     </div>
     <div v-else>
         <LoadingSpinner></LoadingSpinner>
     </div>
-
+    
 </template>
+<style scoped>
+.modal {
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+}
 
-<style>
-
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+}
 </style>

@@ -494,7 +494,7 @@ export default {
             </div>
         </div>
     </div>
-    <div v-else class="container">
+    <div v-else class="container d-flex justify-content-center align-items-center" style="overflow-x: auto; overflow-y: auto;">
         <Stream :posts="photos" @delete-post="DeletePost" :key="photos.length"></Stream><!---->
     </div>
     <!--  v-if="isListVisible" -->

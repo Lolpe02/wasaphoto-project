@@ -2,13 +2,14 @@
 
 
 export default {
-
     props: {
         post_data: {
             type: Number
         }
     },
+    components: {
 
+    },
     data: function () {
         return {
             datetime: null,
@@ -296,11 +297,11 @@ export default {
 
     <!-- Bordered Wrapper -->
 
-    <div class="rounded p-2 m-2 border shadow-lg">
+    <div class="rounded p-2 m-2 border shadow-lg" style="width: 500px;">
         <div class="row align-content-between my-2">
-            <div class="col">
+            <div  class="col">
                 <i class="bi-person-circle mx-2" style="font-size: 2em"></i>
-                <span class="col font-weight-bold h1">
+                <span class="col font-weight-bold h1" v-if="!is_your_post">
                     {{ creatorname }}
                 </span>
             </div>
@@ -323,7 +324,7 @@ export default {
         </div>
 
         <div class="row">
-            <Photo :src="post_data" :alt="description" :style="{ width: '80%' }">
+            <Photo :src="post_data" :alt="description" :style="{ width: '100%' }" @click=" width= 2*width ">
             </Photo>
         </div>
 
