@@ -19,7 +19,8 @@ export default {
             have_i_liked_this: false,
             creatorname: null,
             likes: 0,
-            comments: []
+            comments: [],
+            likeslist: [],
         }
     },
 
@@ -28,20 +29,7 @@ export default {
     methods: {
 
         async initialize() {
-            /*
-                let photo_jhjid = document.querySelector("input").value;
-                photo_id = photo_id.trim();
-                if (photo_id.length > 0) 
-                {
-                    let response = await this.$axios.get("/Images/" + photo_id,
-                        {
-                        headers: {
-                        'Content-Type': 'application/json',
-                        'accept': 'application/json, image/*',
-                        'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                        }
-                        });
-                }*/
+
             this.photo_id = this.post_data;
             await this.$axios.get("/Images/" + this.post_data + "/metadata/",
                 {
@@ -53,7 +41,6 @@ export default {
             }).catch((error) => {
                 if (error.response.status == 403) {
                     alert("You are not authorized to view this photo");
-                    
                 } else if (error.response.status == 404) {
                     alert("Photo not found");
                 } else {
@@ -140,70 +127,59 @@ export default {
 
 
         },
-/*
+
         async AddComment(text) {
 
             // Update the frontend, then update the state on the server
 
-            const creation_time = new Date().toISOString();
+            let creation_time = new Date().toISOString();
 
-            console.log("Creation time: " + creation_time);
-
-            const to_hash = creation_time + this.$user_state.username + this.photo_id;
-
-            // SHA256 hash the comment ID
-
-            const comment_id = this.$hasher(to_hash);
-
-            let comm_obj = {
-                comment_id: {
-                    "hash": comment_id
-                },
-                author: {
-                    "username-string": this.$user_state.username
-                },
-                body: text,
-                "creation-time": creation_time,
-                parent_post: {
-                    "hash": this.photo_id
+            await this.$axios.post("/Images/" + this.photo_id + "/comments/",
+                text, {
+                headers: {
+                'Content-Type': 'application/json',
+                'accept': 'application/json',
+                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
-            }
-
-            console.log(comm_obj)
-
-            // Add to the comments array, triggering a re-render
-            this.comments.push(comm_obj);
-
-            // Update the state on the server
-
-            console.log("Request Path: " + "/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/comments");
-
-            let response = await this.$axios.put("/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/comments/" + comment_id,
-                comm_obj,
-                {
-                    headers: {
-                        "Authorization": this.$user_state.headers.Authorization,
-                        "commenter_name": this.$user_state.username
+            }).catch((error) => {
+                if (error.response.status == 403) {
+                    alert("You are not authorized to comment");
+                } else if (error.response.status == 404) {
+                    alert("Photo not found, cant comment on it");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
+                return;
+            }).then((response) => {
+                if (response.data == null || response == undefined) {
+                    alert("Error: " + response.data);
+                    return;
+                } else {
+                    let comm_obj = {
+                        commentId: response.data,
+                        creator: this.$user_state.username,
+                        content: text,
+                        date: creation_time
                     }
-                });
-
-
+                    this.comments.push(comm_obj);
+                }
+            });
         },
 
         async DeletePost() {
 
             // Update the state on the server
+            let response = await this.$axios.delete("/Images/" + this.photo_id,
+                    {
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                    }
+                    });
 
-            console.log("Request Path: " + "/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id);
-
-            let response = await this.$axios.delete("/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id, {
-                headers: {
-                    "Authorization": this.$user_state.headers.Authorization
-                }
-            });
-
-            if (response.statusText != "No Content") {
-                alert("Error: " + response.statusText);
+            if (response.status != 200) {
+                alert("Error: " + response.data);
                 return;
             }
 
@@ -213,45 +189,47 @@ export default {
         },
 
         async Like() {
-
-            // Update the state on the server
-
-            console.log("Request Path: " + "/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization);
-
-            console.log(this.$user_state.headers.Authorization)
-
-            let response = await this.$axios.put("/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {}, {
+            await this.$axios.put("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, null, {
                 headers: {
-                    "Authorization": this.$user_state.headers.Authorization
+                    "Authorization": "Bearer " + this.$user_state.headers.Authorization,   
+                    "accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+            }).catch((error) => {
+                if (error.response.status == 403) {
+                    alert("You are not authorized to like this photo");
+                } else if (error.response.status == 404) {
+                    alert("Photo not found, cant like it");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
+                return;
+            }).then((response) => {
+                if (response.status != 200 && response.status != 201) {
+                    alert("200 or 201: " + response.data);
+                    return;
+                } else if (response.status == 200) {
+                    alert("You have already liked this photo");
+                    return;
+                } else {
+                    this.have_i_liked_this = true;
+                    this.likes++;
                 }
             });
-
-            if (response.statusText != "No Content") {
-                alert("Error: " + response.statusText);
-                return;
-            }
-
-            // Only for consistency, the component does this internally.
-            this.have_i_liked_this = true;
-            this.likes++;
         },
 
         async Unlike() {
 
             // Update the state on the server
+            let response = await this.$axios.delete("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization
+                    }
+                });
 
-            console.log("Request Path: " + "/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization);
-
-            console.log(this.$user_state.headers.Authorization)
-
-            let response = await this.$axios.delete("/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {
-                headers: {
-                    "Authorization": this.$user_state.headers.Authorization
-                }
-            });
-
-            if (response.statusText != "No Content") {
-                alert("Error: " + response.statusText);
+            if (response.status != 200) {
                 return;
             }
 
@@ -262,26 +240,23 @@ export default {
         async DeleteComment(comment) {
 
             // Update the state on the server
+            let response = await this.$axios.delete("/Images/" + this.photo_id + "/comments/" + comment.commentId,
+                    {
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                    }
+                });
 
-            console.log("Request Path: " + "/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/comments/" + comment.comment_id["hash"]);
-
-            let response = await this.$axios.delete("/users/" + this.post_data.author_name["username-string"] + "/profile/photos/" + this.photo_id + "/comments/" + comment.comment_id["hash"], {
-                headers: {
-                    "Authorization": this.$user_state.headers.Authorization
-                }
-            });
-
-            if (response.statusText != "No Content") {
-                alert("Error: " + response.statusText);
+            if (response.status != 200) {
+                alert("Error: " + response.data);
                 return;
             }
 
             // Remove the comment from the array
-            this.comments = this.comments.filter((c) => c.comment_id["hash"] != comment.comment_id["hash"]);
-
+            this.comments = this.comments.filter((c) => c.commentId != comment.commentId);
         },
-*/
-
     },
 
     mounted() {
@@ -324,8 +299,7 @@ export default {
         </div>
 
         <div class="row">
-            <Photo :src="post_data" :alt="description" :style="{ width: '100%' }" @click=" width= 2*width ">
-            </Photo>
+            <Photo :src="post_data" :alt="description" :style="{ width: '100%', cursor: 'pointer' }"></Photo>
         </div>
 
         <!-- Divider <hr class="mt-1 mb-4"> -->
@@ -335,9 +309,9 @@ export default {
         <!-- Caption -->
 
         <div class="row">
-            <div class="col-12">
+            <div class="col-12" style="width: 500px;">
                 <i class="bi-person-circle mx-1" style="font-size: 1.5em"></i>
-                <span class="font-weight-bold h1" style="margin-right: 5px;">{{ description }}</span>
+                <span class="font-weight-bold h1" style="margin-right: 5px; width: 500px; overflow-y: auto;"> {{ description }}</span>
             </div>
         </div>
 
@@ -346,44 +320,75 @@ export default {
         <hr class="my-4">
 
         <!-- Comments -->
-        <div class="row mt-3 align-content-start">
-            <div class="col-auto">
-                <LikeCounter class="v-center" :likes_count="this.likes" :liked="this.have_i_liked_this" @like="Like"
-                    @unlike="Unlike"></LikeCounter>
-            </div>
+        <div class="row mt-3 align-content-start justify-content-between">
             <div class="col-auto d-flex align-items-center pb-2">
-                <button class="btn bt-sm comment-button btn-outline-primary v-center">
-                    <i class="bi-chat" @click="ToCommentWriter">Comment</i>
-                </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#commList">Comments</button>
+            </div>
+            
+            <div class="col-auto " style="width: max-content;">
+                <LikeCounter class="v-center" :likes_count="this.likes" :liked="this.have_i_liked_this" @like="Like"
+                    @unlike="Unlike">
+                </LikeCounter>
+            </div>
+            
+
+            <div class="col-auto d-flex align-items-center pb-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#likeList">Likes</button>
             </div>
 
         </div>
-
-        <div class="row">
-            <div v-if="comments.length == 0" class="col-12 align-content-center w-100"><!-- Center the text -->
-                <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No comments yet.</span>
-            </div>
-            <div v-else class="col-12">
-                <span class="h4 mx-1 font-weight-bold align-middle mb-2 text-start">Comments: </span>
-            </div>
-            <div class="col-12 my-3">
-                <Comment v-for="comment in comments" :comment="comment" :key="comment.commentId"
-                    @delete="DeleteComment">
-                </Comment>
-            </div>
-
-        </div>
-
+            
+        
         <!-- CommentWriter -->
-
-        <div class="row my-0">
-            <div class="col-12">
-                <CommentWriter id="comment-writer" :photo_id="this.post_data" :author_name="creatorname" @comment="AddComment">
-                </CommentWriter>
-            </div>
-        </div>
-
-
+        
+        
+        <Modal id="commList" >
+            <!---->
+            <template v-slot:header>
+                
+                    <div class="col-16">
+                        <CommentWriter id="comment-writer" :photo_id="this.photo_id" :author_name="this.creatorname" @comment="AddComment">
+                        </CommentWriter>
+                    </div>
+                
+            </template>
+            <template  v-slot:body>
+                <div class="row">
+                    <div v-if="comments.length == 0" class="col-12 align-content-center w-100"><!-- Center the text -->
+                        <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No comments yet.</span>
+                    </div>
+                    <div v-else class="col-12">
+                        <span class="h4 mx-1 font-weight-bold align-middle mb-2 text-start">Comments: </span>
+                    </div>
+                    <div class="col-12 my-3">
+                        <Comment v-for="comment in comments" :comment="comment" :key="comment.commentId"
+                            @delete="DeleteComment">
+                        </Comment>
+                    </div>
+                </div>
+            </template>
+        </Modal>
+        <Modal id="likeList">
+            <!---->
+            <template v-slot:header>
+                <div class="col-auto d-flex align-items-center pb-2">
+                    <i class="bi-chat"> Who liked this post</i>
+                    
+                </div>
+            </template>
+            <template  v-slot:body>
+                <div class="row">
+                    <div v-if="likes == 0" class="col-12 align-content-center w-100"><!-- Center the text -->
+                        <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No Likes yet.</span>
+                    </div>
+                    <div v-else class="col-12 my-3">
+                        <Comment v-for="comment in comments" :comment="comment" :key="comment.commentId"
+                            @delete="DeleteComment">
+                        </Comment>
+                    </div>
+                </div>
+            </template>
+        </Modal>
     </div>
 
 

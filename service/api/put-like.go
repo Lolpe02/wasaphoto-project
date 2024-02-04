@@ -3,21 +3,23 @@ package api
 import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
-	"log"
 	"net/http"
+	// "strconv"
+	// "strings"
 )
 
 // receive creator from bearer token, photo id from path, write
 func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+
 	// read security bearer token from header
 	likeCreator, err := extractToken(r)
 	if err != nil {
 		// bad request
-		err = json.NewEncoder(w).Encode(http.StatusUnauthorized) // 403
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		w.WriteHeader(http.StatusUnauthorized) // 401
+		return
 	}
+
 	// Parse the path parameter for the photo id
 	var pid int64
 	pid, err = readPath(ps, "postId")
@@ -28,16 +30,17 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	var yourId int64
 	yourId, err = readPath(ps, "yourId")
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error()) // 401
+		w.WriteHeader(http.StatusBadRequest) // 400
+		err = json.NewEncoder(w).Encode("wrong Id" + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
+
 	if yourId != likeCreator {
 		w.WriteHeader(http.StatusBadRequest)
-		err = json.NewEncoder(w).Encode("something went wrong with your id and token")
+		err = json.NewEncoder(w).Encode("something went wrong with your id and token, " + err.Error())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -65,7 +68,7 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		return
 	}
 	if !follows || postCreator == likeCreator {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)                                                             // 401                                                            // 401
 		err = json.NewEncoder(w).Encode("you dont follow or you're trying to like your own post, pityful") // 401
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -82,13 +85,12 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-			return
-		}
-
-		log.Println(err)
-		err = json.NewEncoder(w).Encode("Failed to create like")
-		if err != nil {
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
+			err = json.NewEncoder(w).Encode("Failed to create like")
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 		return
 	}
@@ -99,5 +101,4 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-
 }

@@ -128,11 +128,11 @@ export default {
                 "photo_desc": caption
             }
 
-            let response = await this.$axios.put("/users/" + author + "/profile/photos/" + img_id
-                , req_body, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": this.$user_state.headers.Authorization
+            let response = await this.$axios.put("/users/" + author + "/profile/photos/" + img_id,
+            req_body, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": this.$user_state.headers.Authorization
                 }
             });
 

@@ -34,7 +34,8 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	// put the comment in the database
-	_, err = rt.db.PutComment(creator, content, postId)
+	var commentId int64
+	commentId, err = rt.db.PutComment(creator, content, postId)
 	if err != nil {
 		// could not create comment, internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
@@ -42,7 +43,7 @@ func (rt *_router) comment(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	// return the id of the comment?? idk
 	w.WriteHeader(http.StatusCreated) // 201
-	err = json.NewEncoder(w).Encode("comment created")
+	err = json.NewEncoder(w).Encode(commentId)
 	if err != nil {
 		// could not encode comment, internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500

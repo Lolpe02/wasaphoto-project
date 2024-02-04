@@ -14,7 +14,7 @@
 </script>
 <template>
   <div class="modal fade" title="ModalWindow" tabindex="-1" role="dialog" aria-labelledby="Modal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="ModalTitle">
@@ -27,7 +27,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body justify-content-center align-items-center" style="overflow-x: auto; overflow-y: auto;">
           <h5 id="ModalBody">
             <!---->
             <slot name="body">
@@ -46,13 +46,14 @@
 </template>
 
 <style>
-.modal-wrapper {
+.modal-fade {
   display: table-cell;
   vertical-align: middle;
 }
 
 .modal-content {
-  width: 300px;
+  box-sizing: border-box;
+  width: 6000px;
   margin: 0px auto;
   padding: 20px 30px;
   background-color: #fff;

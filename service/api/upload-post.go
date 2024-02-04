@@ -58,7 +58,9 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 		}
 		return
 	}
-	_, err = rt.db.CreatePost(&file, &description, enc, creator)
+
+	var postId int64
+	postId, err = rt.db.CreatePost(&file, &description, enc, creator)
 	if err != nil {
 		// could not create post, internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
@@ -80,7 +82,7 @@ func (rt *_router) upload(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// return the id of the post?? idk
 	w.WriteHeader(http.StatusCreated) // 201
-	err = json.NewEncoder(w).Encode("post created")
+	err = json.NewEncoder(w).Encode(postId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError) // 500
 	}

@@ -30,11 +30,11 @@ func extractToken(r *http.Request) (bearer int64, err error) {
 	// Normally Authorization the_token
 	strArr := strings.Split(bearerToken, " ")
 	if len(strArr) == 2 {
-		intId, err1 := strconv.ParseInt(strArr[1], 10, 64)
-		if err1 != nil {
+		bearer, err = strconv.ParseInt(strArr[1], 10, 64)
+		if err != nil {
 			return -1, errors.New("ParseInt error")
 		}
-		return intId, nil
+		return
 	}
 	return -1, errors.New("something wrong with authorization header")
 }

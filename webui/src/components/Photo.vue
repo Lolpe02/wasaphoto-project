@@ -23,6 +23,11 @@ export default {
             isModalOpen: false
         }
     },
+    watch: {
+        style: function (new_style) {
+            this.style_ = new_style;
+        }
+    },
 
     methods: {
 
@@ -61,11 +66,6 @@ export default {
         },
         ToggleModal() {
             this.isModalOpen = !this.isModalOpen;
-            if (document.body.style.overflow == "auto") {
-                document.body.style.overflow = "hidden"; // Disable scrolling
-            } else if (document.body.style.overflow == "hidden") {
-                document.body.style.overflow = "auto"; // Enable scrolling}
-            }
             console.log(this.isModalOpen)
         },
 
@@ -85,33 +85,21 @@ export default {
 <template>
 
     <div v-if="!is_loading">
-        <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
-            :style="(style_ != null ? style_ : '')" @click="ToggleModal"/>
-        <div v-if="this.isModalOpen" class="modal">
-            <img :src="src_" class="modal-content" @click="ToggleModal"/>
-        </div>
+            <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
+            :style="(style_ != null ? style_ : '')" />
+        
+        <!--<button type="button" data-bs-toggle="modal" data-bs-target="#bigimg">
+            <Modal id="bigimg" style="{width: 2000}">
+            <template v-slot:header> </template>
+            <template v-slot:body>
+                <img :src="src_" class="shadow-sm rounded img-fluid opacity-100" style="{width: 2000}" @click="ToggleModal"/>
+            </template>
+        </Modal>-->
     </div>
     <div v-else>
         <LoadingSpinner></LoadingSpinner>
     </div>
-    
 </template>
-<style scoped>
-.modal {
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.9);
-}
 
-.modal-content {
-    margin: auto;
-    display: block;
-    width: 80%;
-    max-width: 700px;
-}
+<style>
 </style>

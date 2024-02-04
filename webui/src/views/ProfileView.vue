@@ -24,12 +24,12 @@ export default {
     methods: {
         async refresh() {
             console.log("Refreshing profile");
-            this.username = this.$route.params.username;
             // Redirect to login if not logged in
-            if (this.$user_state.username == null) {
+            if (this.$user_state.username == null || this.$user_state.headers.Authorization == null) {
                 this.$router.push("/login");
                 return;
             }
+            this.username = this.$route.params.username;
             this.is_me = this.$route.params.username == this.$user_state.username;
             this.$user_state.current_view = this.$views.PROFILE;
             // 
@@ -44,7 +44,7 @@ export default {
                 }
             }).catch(err => {
                 if (err.response.status == 400) {
-                    alert("Error: " + err.response.data);
+                    alert("Error getting profile: " + err.response.data);
                     return;}
                 else if (err.response.status == 404) {
                     console.log("Users not found");
@@ -98,11 +98,11 @@ export default {
                     this.has_banned_you = true;
                     this.search_results = null;
                 } else {
-                    alert("Error: " + err.response.data);
+                    alert("Error getting following: " + err.response.data);
                     return;
                 }
             }).then(response => {
-                if (response.data == null || response.data == undefined) {
+                if (response.data == null || response == undefined) {
                     this.followingList = [];
                     this.following = 0;
                 } else {
@@ -130,11 +130,11 @@ export default {
                         this.has_banned_you = true;
                         this.search_results = null;
                     } else {
-                        alert("Error: " + err.response.data);
+                        alert("Error getting followers: " + err.response.data);
                         return;
                     }
                 }).then(response => {
-                    if (response.data == null || response.data == undefined) {
+                    if (response.data == null || response == undefined) {
                         this.followerList = [];
                         this.followers = 0;
                     } else {
@@ -245,7 +245,7 @@ export default {
             });
         },
         async Follow() {
-            let response = await this.$axios.post("/Users/me/following/",
+            await this.$axios.post("/Users/me/following/",
                 this.their_id, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -353,11 +353,12 @@ export default {
                 this.followerList = [],
                 this.followingList = [],
                 this.username = null
+                this.refresh();
             };
             this.is_me = to.params.username == this.$user_state.username;
             this.searchedUser = "";
             this.search_results = null;
-            this.refresh();
+            
         }
     }
 }

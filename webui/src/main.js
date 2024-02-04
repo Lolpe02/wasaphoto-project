@@ -8,6 +8,9 @@ import Stream from './components/Stream.vue'
 import Photo from './components/Photo.vue'
 import PhotoPost from './components/PhotoPost.vue'
 import Modal from './components/Modal.vue'
+import Comment from './components/Comment.vue'
+import LikeCounter from './components/LikeCounter.vue'
+import CommentWriter from './components/CommentWriter.vue'
 import requests from './views/requests.vue'
 
 import './assets/dashboard.css'
@@ -40,16 +43,16 @@ app.component("Modal", Modal);
 app.component("Stream", Stream);
 app.component("Photo", Photo);
 app.component("PhotoPost", PhotoPost);
+app.component("Comment", Comment);
+app.component("LikeCounter", LikeCounter);
+app.component("CommentWriter", CommentWriter);
 
 app.use(router)
 app.mount('#app')
 
 /*
 
-import Comment from './components/Comment.vue'
-import LikeCounter from './components/LikeCounter.vue'
 
-import CommentWriter from './components/CommentWriter.vue'
 
 import './assets/dashboard.css'
 import './assets/main.css'
@@ -73,10 +76,7 @@ app.config.globalProperties.$hasher = (password) => {
 
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
-app.component("Comment", Comment);
-app.component("LikeCounter", LikeCounter);
 
-app.component("CommentWriter", CommentWriter);
 
 app.use(router)
 app.mount('#app')
