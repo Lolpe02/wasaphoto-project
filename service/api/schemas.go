@@ -1,12 +1,10 @@
 package api
 
 type user struct {
-	UserId   int64   `json:"userId"`
-	Name     string  `json:"userName"`
-	Date     string  `json:"date"`
-	Profile  []int64 `json:"posted"`
-	Follows  []int64 `json:"following"`
-	Followed []int64 `json:"followed"`
+	UserId  int64   `json:"userId"`
+	Name    string  `json:"userName"`
+	Date    string  `json:"date"`
+	Profile []int64 `json:"posted"`
 }
 type post struct {
 	UserId  int64  `json:"creatorId"`

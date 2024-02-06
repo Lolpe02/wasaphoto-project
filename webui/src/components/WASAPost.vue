@@ -121,8 +121,7 @@ export default {
                 return;
             });
         },
-
-        async ToCommentWriter() {
+        /*async ToCommentManager() {
 
             // Jump to the comment writer
 
@@ -134,7 +133,7 @@ export default {
             });
 
 
-        },
+        },*/
 
         async AddComment(text) {
 
@@ -203,7 +202,6 @@ export default {
                     "Content-Type": "application/json"
                 }
             }).catch((error) => {
-                
                 if (error.response.status == 401) {
                     alert("You are not authorized to like this photo");
                 } else if (error.response.status == 404) {
@@ -364,9 +362,9 @@ export default {
             </div>
 
             <div class="col-auto " style="width: max-content;">
-                <LikeCounter class="v-center" :likes_count="this.likes" :liked="this.have_i_liked_this" @like="Like"
+                <LikeManager class="v-center" :likes_count="this.likes" :liked="this.have_i_liked_this" @like="Like"
                     @unlike="Unlike">
-                </LikeCounter>
+                </LikeManager>
             </div>
             
 
@@ -377,7 +375,7 @@ export default {
         </div>
             
         
-        <!-- CommentWriter -->
+        <!-- CommentManager -->
         
         
         <Modal :id="'commList' + post_data" >
@@ -385,8 +383,8 @@ export default {
             <template v-slot:header>
                 
                     <div class="col-16">
-                        <CommentWriter id="comment-writer" :photo_id="this.photo_id" :author_name="this.creatorname" @comment="AddComment">
-                        </CommentWriter>
+                        <CommentManager id="comment-writer" :photo_id="this.photo_id" :author_name="this.creatorname" @comment="AddComment">
+                        </CommentManager>
                     </div>
                 
             </template>

@@ -37,7 +37,7 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		}
 		return
 	}
-	// you can see this person's profile only if you're authenticated
+	// you can see this person's profile only if you're authenticated and not banned
 	var yourId int64
 	yourId, err = extractToken(r)
 	if err != nil {
@@ -45,13 +45,23 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
-	var followed []int64
-
-	followed, _, _, err = rt.db.GetFolloweds(targetId, yourId)
+	// check if you're banned
+	var banned bool
+	_, banned, err = rt.db.GetBanneds(targetId, yourId)
 	if err != nil {
-		// could not get follows, throw internal server error
+		// could not check if youre banned, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("couldnt search follows")
+		err = json.NewEncoder(w).Encode("couldnt check if youre banned, " + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	if banned {
+		// you're banned, throw forbidden
+		w.WriteHeader(http.StatusForbidden) // 403
+		err = json.NewEncoder(w).Encode("you're banned by " + username)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) // 500
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,17 +92,8 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 
 		return
 	}
-	follows, _, _, err := rt.db.GetFollowing(targetId, -1)
-	if err != nil {
-		// could not get follows, throw internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("couldnt search following")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) // 500
-		}
-		return
-	}
-	user := user{targetId, selname, sub, postIds, follows, followed}
+
+	user := user{targetId, selname, sub, postIds}
 
 	// return the list of post ids of that user
 	w.WriteHeader(http.StatusOK) // 200

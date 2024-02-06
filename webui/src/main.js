@@ -6,12 +6,11 @@ import ErrorMsg from './components/ErrorMsg.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import Stream from './components/Stream.vue'
 import Photo from './components/Photo.vue'
-import PhotoPost from './components/PhotoPost.vue'
+import WASAPost from './components/WASAPost.vue'
 import Modal from './components/Modal.vue'
 import Comment from './components/Comment.vue'
-import LikeCounter from './components/LikeCounter.vue'
-import CommentWriter from './components/CommentWriter.vue'
-import requests from './views/requests.vue'
+import LikeManager from './components/LikeManager.vue'
+import CommentManager from './components/CommentManager.vue'
 
 import './assets/dashboard.css'
 import './assets/main.css'
@@ -39,14 +38,13 @@ app.config.globalProperties.$views = views;
 app.config.globalProperties.$user_state = reactive(state);
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
-app.component("requests", requests);
 app.component("Modal", Modal);
 app.component("Stream", Stream);
 app.component("Photo", Photo);
-app.component("PhotoPost", PhotoPost);
+app.component("WASAPost", WASAPost);
 app.component("Comment", Comment);
-app.component("LikeCounter", LikeCounter);
-app.component("CommentWriter", CommentWriter);
+app.component("LikeManager", LikeManager);
+app.component("CommentManager", CommentManager);
 
 app.use(router)
 app.mount('#app')

@@ -46,37 +46,35 @@ export default {
                 if (response == undefined || response.data == null) {
                     console.log("Error: undefined response getting profile");
                     return;
-                }                
-                if (response.data["posted"] == null) {
+                }
+                if (response.data.posted == null) {
                     this.posts = 0;
                 } else {
-                    this.photos = response.data["posted"];
+                    this.photos = response.data.posted;
                     this.posts = this.photos.length;
-                    this.subscription = this.FormatDate(response.data["date"]);
+                    this.subscription = this.FormatDate(response.data.date);
                     this.their_id = response.data.userId;
-                    let their_name = response.data["userName"];
+                    let their_name = response.data.userName;
                     if (their_name != this.$route.params.username) {
                         alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
                         this.$router.push("/login");
                         return;
-                    }   
+                    }
                 }
             }).catch(err => {
+                this.search_results = null;
                 if (err.response.status == 400) {
                     alert("Error getting profile: " + err.response.data);
-                    return;
                 } else if (err.response.status == 404) {
+                    alert("Profile not found");
                     console.log("Users not found");
-                    this.search_results = null;
                 } else if (err.response.status == 403) {
                     console.log("banned by user");
                     this.has_banned_you = true;
-                    this.search_results = null;
-                    return
                 } else {
                     alert("Error: " + err.response.data);
-                    return;
                 }
+                return;
             });
             await this.$axios.get("/Users/me/following/", {
                 headers: {
@@ -93,7 +91,7 @@ export default {
                     this.following = 0;
                 } else {
                     this.followingList = response.data;
-                    this.following = this.followingList.length;     
+                    this.following = this.followingList.length;
                 }
             }).catch((err) => {
                 if (err.response.status == 404) {
@@ -163,7 +161,7 @@ export default {
                         "userName": search
                     }
                 }).catch(err => {
-                    
+
                     if (err.response.status == 404) {
                         console.log("Users not found");
                         this.search_results = null;
@@ -183,7 +181,7 @@ export default {
                     if (response.status != 200) {
                         alert("Error: " + response.data);
                         return;
-                    }                    
+                    }
                     this.search_results = response.data;
                 });
             }
@@ -245,6 +243,24 @@ export default {
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
+                if (response.status == 201) {
+                    alert("Now following user");
+                }
+                else if (response.status == 200) {
+                    alert("Already followed user");
+                    return;
+                }
+                else {
+                    alert("Error: " + response.data);
+                    return;
+                }
+                this.is_following = true;
+                this.followers += 1;
             }).catch(error => {
                 if (error.response.status == 401) {
                     alert("Error: " + error.response.data);
@@ -261,26 +277,8 @@ export default {
                     alert("Error: " + error.response.data);
                     return;
                 }
-            }).then(response => {
-                if (response == undefined || response.data == null) {
-                    alert("undefined response");
-                    return
-                }
-            if (response.status == 201) {
-                alert("Now following user");
-            }
-            else if (response.status == 200) {
-                alert("Already followed user");
-                return;
-            }
-            else {
-                alert("Error: " + response.data);
-                return;
-            }
-            this.is_following = true;
-            this.followers += 1;
             });
-            
+
         },
         async Unfollow() {
             if (!this.is_following) {
@@ -308,16 +306,23 @@ export default {
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
             });
-            if (response.status == 200) {
-                alert("Already banned user");
+            switch (response.status) {
+                case 200:
+                    alert("Already banned user");
+
+                    break;
+                case 201:
+                    alert("Now banned user");
+                    break;
+                default:
+                    alert("Error: " + response.data);
+                    return;
             }
-            else if (response.status == 201) {
-                alert("Now banned user");
-            }
-            else {
-                alert("Error: " + response.data);
-                return;
-            }
+            if (this.followingList.includes(this.$user_state.username)) {
+                // theyre following you,
+                this.following--;
+                this.followingList = this.followingList.filter((value) => value != this.$user_state.username); 
+            };      
             this.is_banned = true;
         },
         async UnBan() {
@@ -334,7 +339,7 @@ export default {
             }
             this.is_banned = false;
         },
-        
+
     },
     mounted() {
         this.refresh();
@@ -349,14 +354,14 @@ export default {
             this.search_results = null;
             if (to.params.username != from.params.username) {
                 this.has_banned_you = false,
-                this.is_following = false,
-                this.is_banned = false,
-                this.followerList = [],
-                this.followingList = [],
-                this.username = null
+                    this.is_following = false,
+                    this.is_banned = false,
+                    this.followerList = [],
+                    this.followingList = [],
+                    this.username = null
                 this.photos = [];
                 this.refresh();
-            };            
+            };
         }
     }
 }
@@ -366,27 +371,29 @@ export default {
     <div class="container">
         <div class="align-items-center text-center h-80">
             <div class="col-md-12 col-sm-6">
-					<form class="nav form-inline my-2 my-md-0" :class="{
-						disabled: $user_state.username == null, 'd-none': $user_state.username == null
-					}">
-						<input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text" placeholder="Search for your friends (if you have them)" aria-label="Search"
-							@input="PerformSearch()" v-on:keyup.enter="PerformSearch()" >
-						<!-- Results -->
-                            <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
+                <form class="nav form-inline my-2 my-md-0" :class="{
+                    disabled: $user_state.username == null, 'd-none': $user_state.username == null
+                }">
+                    <input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text"
+                        placeholder="Search for your friends (if you have them)" aria-label="Search"
+                        @input="PerformSearch()" v-on:keyup.enter="PerformSearch()">
+                    <!-- Results -->
+                    <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
 
-                                <li class=" list-group-item align-middle" v-if="search_results" v-for="(userId, userName) in search_results" 
-                                    :key="userName"  @click="SeeProfile(userName, userId)">
-                                    <i class="bi-person-circle m-1 fa-lg"  style="font-size: 1.0rem;"></i>
-                                    {{ userName }}            
-                                </li>
-                            </ul>		
+                        <li class=" list-group-item align-middle" v-if="search_results"
+                            v-for="(userId, userName) in search_results" :key="userName"
+                            @click="SeeProfile(userName, userId)">
+                            <i class="bi-person-circle m-1 fa-lg" style="font-size: 1.0rem;"></i>
+                            {{ userName }}
+                        </li>
+                    </ul>
 
-					</form>
-				</div>
+                </form>
+            </div>
             <div class="container text-center pt-3 pb-2 border-bottom">
                 <div class="row w-80 my-3">
                     <h2 class="col-3 text-break d-inline-block" style="vertical-align: bottom;">
-                        <i class="bi-person-circle mx-1"></i>  {{this.username}}'s profile.
+                        <i class="bi-person-circle mx-1"></i> {{ this.username }}'s profile.
                     </h2>
                     <div class="col-9" style="align-items: center; vertical-align: middle;">
                         <div class="row">
@@ -400,18 +407,20 @@ export default {
                             <div class="col-3">
                                 <div class="row border p-1 pt-2 rounded me-1 shadow-sm">
                                     <!-- @click= "ToggleVisibility(false)"this.isListVisible data-toggle="modal"=<button  >Show list</button> !this.isListVisible v-b-modal= "FollowL"-->
-                                    <button type="button" class="btn btn-primary" @click= "toorfrom=true" data-bs-toggle="modal" data-bs-target="#ciao">List</button>
+                                    <button type="button" class="btn btn-primary" @click="toorfrom = true"
+                                        data-bs-toggle="modal" data-bs-target="#ciao">List</button>
                                     <div class="col-12">
                                         <h5>Followers: {{ followers }}</h5>
                                     </div>
-                                    
-        
+
+
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="row border p-1 pt-2 rounded me-1 shadow-sm">
                                     <!--<button @click= "ToggleVisibility(true)" >Show list</button>-->
-                                    <button type="button" class="btn btn-primary" @click= "toorfrom=false" data-bs-toggle="modal" data-bs-target="#ciao">List</button>
+                                    <button type="button" class="btn btn-primary" @click="toorfrom = false"
+                                        data-bs-toggle="modal" data-bs-target="#ciao">List</button>
 
                                     <div class="col-12">
                                         <h5>Following: {{ following }}</h5>
@@ -478,7 +487,7 @@ export default {
                 </div>
             </div>
         </div>
-        
+
     </div>
     <div v-if="has_banned_you" class="container">
         <div class="row">
@@ -493,31 +502,30 @@ export default {
             </div>
         </div>
     </div>
-    <div v-else  >
+    <div v-else>
         <Stream :posts="photos" @delete-post="DeletePost" :key="photos.length"></Stream><!---->
     </div>
     <!--  v-if="isListVisible" -->
 
     <Modal id="ciao">
-            <!---->
-            <template v-if="toorfrom" v-slot:header>
-                People following this user
-            </template>
-            <template v-else v-slot:header>
-                People this user is following
-            </template>
-            <template v-if="toorfrom" v-slot:body>
-                <ul>
-                    <li v-for="(follower, index) in this.followerList || []" :key="index">{{index+1}} - {{ follower }}</li>
-                </ul>
-            </template>
-            <template v-else v-slot:body>
-                <ul>
-                    <li v-for="(follower, index) in this.followingList || []" :key="index">{{index+1}} - {{ follower }}</li>
-                </ul>
-            </template>
-        </Modal>
-    
+        <!---->
+        <template v-if="toorfrom" v-slot:header>
+            People following this user
+        </template>
+        <template v-else v-slot:header>
+            People this user is following
+        </template>
+        <template v-if="toorfrom" v-slot:body>
+            <ul>
+                <li v-for="(follower, index) in this.followerList || []" :key="index">{{ index + 1 }} - {{ follower }}</li>
+            </ul>
+        </template>
+        <template v-else v-slot:body>
+            <ul>
+                <li v-for="(follower, index) in this.followingList || []" :key="index">{{index+1}} - {{ follower }}</li>
+            </ul>
+        </template>
+    </Modal>
 </template>
 
 <style>
@@ -525,8 +533,10 @@ export default {
 .fade-leave-active {
     transition: opacity cubic-bezier(0.4, 0, 0.2, 1) 0.1s
 }
+
 .fade-enter,
 .fade-leave-to {
     opacity: 0
-};
+}
+
 </style>

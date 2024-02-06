@@ -104,22 +104,7 @@ components:
           minItems: 0
           maxItems: 10000
           readOnly: true
-        following:
-          description: list of user's followed users
-          type: array
-          items: 
-            $ref: "#/components/schemas/User/properties/userId"
-          minItems: 0
-          maxItems: 10000
-          readOnly: true
-        followed:
-          description: list of user's followers
-          type: array
-          items: 
-            $ref: "#/components/schemas/User/properties/userId"
-          minItems: 0
-          maxItems: 10000
-          readOnly: true
+      
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
@@ -782,7 +767,7 @@ paths:
           $ref: "#/components/responses/ServerError"
   /Database/:
     put:
-      summary: extract from the whole database
+      summary: query and extract from the whole database
       description: |
         execute query that returns result rows/table
         (like SELECT, returning),only for debug purposes
