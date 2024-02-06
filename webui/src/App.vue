@@ -59,7 +59,7 @@ export default {
 										Profile
 									</RouterLink>
 								</li>
-								<li class="nav-item" @click="Logout">  <!---->
+								<li class="nav-item" >  <!--@click="Logout"-->
 									<RouterLink to="/login" class="nav-link">
 										<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
 										Logout

@@ -7,9 +7,6 @@
       },
       
     },
-    mounted() {
-      console.log("Modal created, id = " + this.id);
-    },
   };
 </script>
 <template>

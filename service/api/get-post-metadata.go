@@ -40,7 +40,7 @@ func (rt *_router) GetPostMetadata(w http.ResponseWriter, r *http.Request, ps ht
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		return
 	}
-	//get userName from userId
+	// get userName from userId
 	var userName string
 	userName, _, err = rt.db.SearchById(userId)
 	if err != nil {

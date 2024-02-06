@@ -28,18 +28,18 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 			}
-			return
 		} else {
 			w.WriteHeader(http.StatusInternalServerError) // 500
-			err = json.NewEncoder(w).Encode("couldnt search by useranem" + username)
+			err = json.NewEncoder(w).Encode("couldnt search by useranem " + username)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 			}
 		}
 		return
 	}
-	// you can see this person's profile only if you follow them
-	yourId, err := extractToken(r)
+	// you can see this person's profile only if you're authenticated
+	var yourId int64
+	yourId, err = extractToken(r)
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
@@ -48,7 +48,6 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 	var followed []int64
 
 	followed, _, _, err = rt.db.GetFolloweds(targetId, yourId)
-
 	if err != nil {
 		// could not get follows, throw internal server error
 		w.WriteHeader(http.StatusInternalServerError) // 500
@@ -78,7 +77,6 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		err = json.NewEncoder(w).Encode("couldnt search profile")
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) // 500
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -90,9 +88,9 @@ func (rt *_router) getProfile(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusInternalServerError) // 500
 		err = json.NewEncoder(w).Encode("couldnt search following")
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError) // 500		}
-			return
+			w.WriteHeader(http.StatusInternalServerError) // 500
 		}
+		return
 	}
 	user := user{targetId, selname, sub, postIds, follows, followed}
 

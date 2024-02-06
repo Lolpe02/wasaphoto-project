@@ -23,22 +23,27 @@ export default {
 
     methods: {
         async like() {
-
-            if (this.is_liked) {
-                this.count -= 1
-                this.$emit('unlike')
-
-            } else {
-                this.count += 1
-                this.$emit('like')
+            try {
+                if (this.is_liked) {
+                    this.count -= 1
+                    this.$emit('unlike')
+                } else {
+                    this.count += 1
+                    this.$emit('like')
+                }
+                this.is_liked = !this.is_liked
+            } catch (error) {
+                console.error(error)
             }
-
-            this.is_liked = !this.is_liked
         },
 
         async refresh() {
-            this.is_liked = this.liked
-            this.count = parseInt(this.likes_count)
+            try {
+                this.is_liked = this.liked
+                this.count = parseInt(this.likes_count)
+            } catch (error) {
+                console.error(error)
+            }
         }
 
     },
@@ -55,7 +60,7 @@ export default {
     <div class="d-flex align-items-center pb-2">
 
         <a type="button" class="btn btn-sm btn-outline-secondary likeButton" @click="like"
-            :class="{ 'btn-outline-danger': is_liked, 'btn-outline-success': !is_liked}">
+            :class="{ 'btn-outline-danger': is_liked, 'btn-outline-success': !is_liked }">
             <Transition name="slide-up" mode="out-in">
                 <span v-if="is_liked" class="bi bi-heart-fill"> Unlike</span>
                 <span v-else class="bi bi-heart"> Like</span>

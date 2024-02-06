@@ -46,35 +46,7 @@ func (rt *_router) like(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		}
 		return
 	}
-	// check if user follows creator
-	var postCreator int64
-	postCreator, _, _, err = rt.db.GetMetadata(pid)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		err = json.NewEncoder(w).Encode("couldnt get post owner")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
-	var follows bool
-	_, _, follows, err = rt.db.GetFollowing(postCreator, likeCreator)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		err = json.NewEncoder(w).Encode("Unauthorized" + err.Error()) // 401
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
-	if !follows || postCreator == likeCreator {
-		w.WriteHeader(http.StatusUnauthorized)                                                             // 401                                                            // 401
-		err = json.NewEncoder(w).Encode("you dont follow or you're trying to like your own post, pityful") // 401
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
+
 	like := like{likeCreator, pid}
 	// Call the database function to create the like
 	err = rt.db.PutLike(like.PostId, like.UserId)

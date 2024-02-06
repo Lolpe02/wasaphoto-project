@@ -68,7 +68,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err != nil {
 		// the request body was not a parseable JSON or is missing, rejecting the request
 		w.WriteHeader(http.StatusBadRequest) // 400
-		//ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
+		ctx.Logger.WithError(err).Error("doLogin: the request body was not a parseable JSON or is missing")
 		return
 	}
 	// validating username (removing white spaces and new lines)

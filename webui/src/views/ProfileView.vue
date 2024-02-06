@@ -15,7 +15,7 @@ export default {
             toorfrom: false,
             has_banned_you: false,
             subscription: null,
-            their_id: null,
+            their_id: -1,
             photos: [], // list of IDs, pairs of ("hash", SHA256 hash of the photo)
             followerList: [],
             followingList: [],
@@ -42,23 +42,6 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
-            }).catch(err => {
-                if (err.response.status == 400) {
-                    alert("Error getting profile: " + err.response.data);
-                    return;}
-                else if (err.response.status == 404) {
-                    console.log("Users not found");
-                    this.search_results = null;
-                }
-                else if (err.response.status == 403) {
-                    console.log("banned by user");
-                    this.has_banned_you = true;
-                    this.search_results = null;
-                    return
-                } else {
-                    alert("Error: " + err.response.data);
-                    return;
-                }
             }).then(response => {
                 if (response == undefined || response.data == null) {
                     console.log("Error: undefined response getting profile");
@@ -70,13 +53,29 @@ export default {
                     this.photos = response.data["posted"];
                     this.posts = this.photos.length;
                     this.subscription = this.FormatDate(response.data["date"]);
-                    this.their_id = response.data["userId"];
+                    this.their_id = response.data.userId;
                     let their_name = response.data["userName"];
                     if (their_name != this.$route.params.username) {
                         alert("WHAT HAPPENED? CRITICAL ERROR! BOMBING YOUR HOUSE NOW!");
                         this.$router.push("/login");
                         return;
                     }   
+                }
+            }).catch(err => {
+                if (err.response.status == 400) {
+                    alert("Error getting profile: " + err.response.data);
+                    return;
+                } else if (err.response.status == 404) {
+                    console.log("Users not found");
+                    this.search_results = null;
+                } else if (err.response.status == 403) {
+                    console.log("banned by user");
+                    this.has_banned_you = true;
+                    this.search_results = null;
+                    return
+                } else {
+                    alert("Error: " + err.response.data);
+                    return;
                 }
             });
             await this.$axios.get("/Users/me/following/", {
@@ -88,7 +87,15 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
-            }).catch(err => {
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    this.followingList = [];
+                    this.following = 0;
+                } else {
+                    this.followingList = response.data;
+                    this.following = this.followingList.length;     
+                }
+            }).catch((err) => {
                 if (err.response.status == 404) {
                     console.log("Users not found");
                     this.search_results = null;
@@ -101,14 +108,6 @@ export default {
                     alert("Error getting following: " + err.response.data);
                     return;
                 }
-            }).then(response => {
-                if (response.data == null || response == undefined) {
-                    this.followingList = [];
-                    this.following = 0;
-                } else {
-                    this.followingList = response.data;
-                    this.following = this.followingList.length;     
-                }
             });
             await this.$axios.get("/Users/me/followers/", {
                 headers: {
@@ -119,36 +118,34 @@ export default {
                 params: {
                     "userName": this.$route.params.username
                 }
-            }).catch(
-                err => {
-                    if (err.response.status == 404) {
-                        console.log("Users not found");
-                        this.search_results = null;
-                    }
-                    else if (err.response.status == 403) {
-                        console.log("banned by user");
-                        this.has_banned_you = true;
-                        this.search_results = null;
-                    } else {
-                        alert("Error getting followers: " + err.response.data);
-                        return;
-                    }
-                }).then(response => {
-                    if (response.data == null || response == undefined) {
-                        this.followerList = [];
-                        this.followers = 0;
-                    } else {
-                        this.followerList = response.data;
-                        this.followers = this.followerList.length;
-                        this.is_following = this.followerList.includes(this.$user_state.username);
-                    }
-            }
-            );
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    this.followerList = [];
+                    this.followers = 0;
+                } else {
+                    this.followerList = response.data;
+                    this.followers = this.followerList.length;
+                    this.is_following = this.followerList.includes(this.$user_state.username);
+                }
+            }).catch((err) => {
+                if (err.response.status == 404) {
+                    console.log("Users not found");
+                    this.search_results = null;
+                }
+                else if (err.response.status == 403) {
+                    console.log("banned by user");
+                    this.has_banned_you = true;
+                    this.search_results = null;
+                } else {
+                    alert("Error getting followers: " + err.response.data);
+                    return;
+                }
+            });
         },
         SeeProfile(name, id) {
             this.search_results = null;
             this.searchedUser = name
-            console.log("LOOOK HERE: ", this.searchedUser, id);
+            this.their_id = id;
             this.$router.push("/profile/" + this.searchedUser);
         },
         async PerformSearch() {
@@ -166,6 +163,7 @@ export default {
                         "userName": search
                     }
                 }).catch(err => {
+                    
                     if (err.response.status == 404) {
                         console.log("Users not found");
                         this.search_results = null;
@@ -179,15 +177,13 @@ export default {
                     }
                 }).then(response => {
                     if (response == undefined || response.data == null) {
-                        console.log("Error: undefined response getting profile");
-                        return;
+                        alert("undefined response");
+                        return
                     }
                     if (response.status != 200) {
                         alert("Error: " + response.data);
                         return;
-                    }
-                    console.log(response.data);
-                    
+                    }                    
                     this.search_results = response.data;
                 });
             }
@@ -221,30 +217,27 @@ export default {
                     "accept": "application/json",
                     "Content-Type": "application/json",
                 }
-            }).catch(err => {
-                if (err.response.status == 404) {
-                    alert("either banned by user or not following");
-                    return;
-                }
-                else {
-                    alert("Error: " + err.response.data);
-                    return;
-                }
-            }).then(res => {
-                if (res == undefined) {
-                    console.log("Error: undefined response");
-                    return;
-                }
-                if (res.statusText != "OK") {
-                    alert("Error: " + res.statusText);
-                    return;
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    alert("undefined response");
+                    return
                 }
                 this.$user_state.username = new_name;
                 this.username = new_name;
                 this.$router.push("/profile/" + new_name);
+            }).catch((error) => {
+                if (error.response.status == 404) {
+                    alert("profile not found");
+                    return;
+                }
+                else {
+                    alert("Error: " + error.response.data);
+                    return;
+                }
             });
         },
         async Follow() {
+            console.log("Following user", this.their_id);
             await this.$axios.post("/Users/me/following/",
                 this.their_id, {
                 headers: {
@@ -252,32 +245,36 @@ export default {
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
-            }).catch(err => {
-                if (err.response.status == 401) {
-                    alert("Error: " + err.response.data);
+            }).catch(error => {
+                if (error.response.status == 401) {
+                    alert("Error: " + error.response.data);
                     this.$router.push("/login");
                     return;
-                } else if (err.response.status == 403) {
+                } else if (error.response.status == 403) {
                     this.has_banned_you = true;
                     alert("Banned by " + this.username);
                     return;
-                } else if (err.response.status == 404) {
-                    alert("Error: " + err.response.data);
+                } else if (error.response.status == 404) {
+                    alert("Error: " + error.response.data);
                     return;
                 } else {
-                    alert("Error: " + err.response.data);
+                    alert("Error: " + error.response.data);
                     return;
                 }
-            }).then(res => {
-                if (res.status == 201) {
+            }).then(response => {
+                if (response == undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
+            if (response.status == 201) {
                 alert("Now following user");
             }
-            else if (res.status == 200) {
+            else if (response.status == 200) {
                 alert("Already followed user");
                 return;
             }
             else {
-                alert("Error: " + res.data);
+                alert("Error: " + response.data);
                 return;
             }
             this.is_following = true;
@@ -344,21 +341,22 @@ export default {
     },
     watch: {
         $route(to, from) {
-            console.log("Route changed");
+            if (to.path == "/login" || to.path == "/") {
+                return;
+            }
+            this.is_me = to.params.username == this.$user_state.username;
+            this.searchedUser = "";
+            this.search_results = null;
             if (to.params.username != from.params.username) {
                 this.has_banned_you = false,
-                this.their_id = null,
                 this.is_following = false,
                 this.is_banned = false,
                 this.followerList = [],
                 this.followingList = [],
                 this.username = null
+                this.photos = [];
                 this.refresh();
-            };
-            this.is_me = to.params.username == this.$user_state.username;
-            this.searchedUser = "";
-            this.search_results = null;
-            
+            };            
         }
     }
 }
@@ -376,7 +374,7 @@ export default {
 						<!-- Results -->
                             <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
 
-                                <li class=" list-group-item align-middle" v-if="search_results" v-for="(userId, userName) in search_results"
+                                <li class=" list-group-item align-middle" v-if="search_results" v-for="(userId, userName) in search_results" 
                                     :key="userName"  @click="SeeProfile(userName, userId)">
                                     <i class="bi-person-circle m-1 fa-lg"  style="font-size: 1.0rem;"></i>
                                     {{ userName }}            
@@ -495,7 +493,7 @@ export default {
             </div>
         </div>
     </div>
-    <div v-else class="container d-flex justify-content-center align-items-center" style="overflow-x: auto; overflow-y: auto;">
+    <div v-else  >
         <Stream :posts="photos" @delete-post="DeletePost" :key="photos.length"></Stream><!---->
     </div>
     <!--  v-if="isListVisible" -->
@@ -510,12 +508,12 @@ export default {
             </template>
             <template v-if="toorfrom" v-slot:body>
                 <ul>
-                    <li v-for="(follower, index) in this.followerList" :key="index">{{index+1}} - {{ follower }}</li>
+                    <li v-for="(follower, index) in this.followerList || []" :key="index">{{index+1}} - {{ follower }}</li>
                 </ul>
             </template>
             <template v-else v-slot:body>
                 <ul>
-                    <li v-for="(follower, index) in this.followingList" :key="index">{{index+1}} - {{ follower }}</li>
+                    <li v-for="(follower, index) in this.followingList || []" :key="index">{{index+1}} - {{ follower }}</li>
                 </ul>
             </template>
         </Modal>

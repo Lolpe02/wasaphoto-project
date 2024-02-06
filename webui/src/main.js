@@ -31,6 +31,7 @@ const views = {
     LOGIN: "login",
     FEED: "register",
     PROFILE: "profile",
+    STREAM: "stream",
 }
 
 app.config.globalProperties.$axios = axios;

@@ -46,7 +46,19 @@ export default {
                     "accept": "image/*",     
                     "Content-Type": "application/json"
                 }   
+            }).then((response) => {
+                if (response === undefined || response.data == null) {
+                    alert("undefined response" );
+                    return
+                }
+                const blob = new Blob([response.data], {
+                    type: response.headers["Content-Type"]
+                });
+                 // console.log(response);.headers["Content-Type"]
+                this.src_ = URL.createObjectURL(blob)
+                this.is_loading = false;
             }).catch((error) => {
+                
                 if (error.response.status == 401) {
                     this.$router.push("/login");
                 } else if (error.response.status == 404) {
@@ -55,13 +67,6 @@ export default {
                 this.is_loading = false;
                 this.src_ = null;
                 return;
-            }).then((response) => {
-                const blob = new Blob([response.data], {
-                    type: response.headers["Content-Type"]
-                });
-                console.log(response); //.headers["Content-Type"]
-                this.src_ = URL.createObjectURL(blob)
-                this.is_loading = false;
             });
         },
         ToggleModal() {

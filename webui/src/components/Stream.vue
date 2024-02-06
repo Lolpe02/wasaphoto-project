@@ -45,13 +45,14 @@ export default {
 </script>
 
 <template>
-
-    <div v-for="post in posts_" :key="post" class="m-1">
-        <PhotoPost :post_data="post" @delete-post="RemovePost" />
+    <div class="container d-flex justify-content-center align-items-center" style="display: flex; flex-direction: column; align-content: center; ">
+        <div v-for="post in posts_" :key="post" class="m-1">
+            <PhotoPost :post_data="post" @delete-post="RemovePost" />
+        </div>
     </div>
-
 </template>
 
 <style>
+
 
 </style>

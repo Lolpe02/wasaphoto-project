@@ -44,19 +44,11 @@ export default {
                     'Content-Type': 'application/json',
                     'accept': 'application/json',
                 },
-            }
-            ).catch((error) => {
-                if (error.response.status == 400) {
-                    alert("Invalid username");
-                    return;
-                }
-                this.error = true;
-                this.$user_state.headers.Authorization = null
-                console.log("Error logging in");
-                this.initialize();
-                return;
             }).then((response) => {
-                
+                if (response === undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
                  if (response.status == 201) {
                     // new user created
                     alert("Welcome to the community " + username + "!");
@@ -70,7 +62,17 @@ export default {
                 // localStorage.setItem("userToken", JSON.stringify(response.data));
                 this.error = false;
                 this.$router.push("/");
-                });
+            }).catch((error) => {
+                if (error.response.status == 400) {
+                    alert("Invalid username");
+                    return;
+                }
+                this.error = true;
+                this.$user_state.headers.Authorization = null
+                console.log("Error logging in");
+                this.initialize();
+                return;
+            });
         }
     },
     mounted() {

@@ -20,7 +20,8 @@ export default {
             creatorname: null,
             likes: 0,
             comments: [],
-            likeslist: [],
+            likesList: [],
+            commentNumber: 0
         }
     },
 
@@ -38,16 +39,11 @@ export default {
                 'Content-Type': 'application/json',
                 'accept': 'application/json',
                 }
-            }).catch((error) => {
-                if (error.response.status == 403) {
-                    alert("You are not authorized to view this photo");
-                } else if (error.response.status == 404) {
-                    alert("Photo not found");
-                } else {
-                    alert("Error: " + error.response.data);
-                }
-                return;
             }).then(response => {
+                if (response == undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
                 this.datetime = response.data.date;
                 this.creatorname = response.data.creatorName;
                 this.description = response.data.description;
@@ -59,6 +55,15 @@ export default {
                 time = time[0] + ":" + time[1];
                 this.datetime = date[2] + "/" + date[1] + "/" + date[0] + " at " + time;
                 this.is_your_post = this.creatorname == this.$user_state.username;
+            }).catch((error) => {
+                if (error.response.status == 403) {
+                    alert("You are not authorized to view this photo");
+                } else if (error.response.status == 404) {
+                    alert("Photo not found");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
+                return;
             });                  
             
             // Fetch likes
@@ -68,6 +73,16 @@ export default {
                     'Content-Type': 'application/json',
                     'accept' : 'application/json',
                 }
+            }).then((response) => {
+                if (response == undefined || response.data == null) {
+                    this.likes = 0;
+                    this.have_i_liked_this = false;
+                    return;
+                } else {
+                    this.likes = response.data.length;
+                    this.have_i_liked_this = response.data.includes(this.$user_state.username);
+                    this.likesList = response.data;
+                }
             }).catch((error) => {
                 if (error.response.status == 403) {
                     alert("You are not authorized to view this photo");
@@ -77,15 +92,6 @@ export default {
                     alert("Error: " + error.response.data);
                 }
                 return;
-            }).then((response) => {
-                if (response.data == null || response == undefined) {
-                    this.likes = 0;
-                    this.have_i_liked_this = false;
-                    return;
-                } else {
-                    this.likes = response.data.length;
-                    this.have_i_liked_this = response.data.includes(this.$user_state.username);
-                }
             });
 
             // Fetch comments
@@ -95,6 +101,15 @@ export default {
                     'Content-Type': 'application/json',
                     'accept': 'application/json'
                 }
+            }).then((response) => {
+                if (response == undefined || response.data == null) {
+                    this.comments = [];
+                    this.commentNumber = 0;
+                    return;
+                } else {
+                    this.comments = response.data;
+                    this.commentNumber = response.data.length;
+                }
             }).catch((error) => {
                 if (error.response.status == 403) {
                     alert("You are not authorized to view this photo");
@@ -104,13 +119,6 @@ export default {
                     alert("Error: " + error.response.data);
                 }
                 return;
-            }).then((response) => {
-                if (response.data == null || response == undefined) {
-                    this.comments = [];
-                    return;
-                } else {
-                    this.comments = response.data;
-                }
             });
         },
 
@@ -131,7 +139,6 @@ export default {
         async AddComment(text) {
 
             // Update the frontend, then update the state on the server
-
             let creation_time = new Date().toISOString();
 
             await this.$axios.post("/Images/" + this.photo_id + "/comments/",
@@ -141,6 +148,19 @@ export default {
                 'accept': 'application/json',
                 'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
+            }).then((response) => {
+                if (response == undefined || response.data == null) {
+                    alert("undefined response: comment inserted but not visible");
+                    return;
+                }
+                let comm_obj = {
+                    commentId: response.data,
+                    creator: this.$user_state.username,
+                    content: text,
+                    date: creation_time
+                }
+                this.comments.push(comm_obj);
+                this.commentNumber++;
             }).catch((error) => {
                 if (error.response.status == 403) {
                     alert("You are not authorized to comment");
@@ -150,19 +170,6 @@ export default {
                     alert("Error: " + error.response.data);
                 }
                 return;
-            }).then((response) => {
-                if (response.data == null || response == undefined) {
-                    alert("Error: " + response.data);
-                    return;
-                } else {
-                    let comm_obj = {
-                        commentId: response.data,
-                        creator: this.$user_state.username,
-                        content: text,
-                        date: creation_time
-                    }
-                    this.comments.push(comm_obj);
-                }
             });
         },
 
@@ -196,7 +203,8 @@ export default {
                     "Content-Type": "application/json"
                 }
             }).catch((error) => {
-                if (error.response.status == 403) {
+                
+                if (error.response.status == 401) {
                     alert("You are not authorized to like this photo");
                 } else if (error.response.status == 404) {
                     alert("Photo not found, cant like it");
@@ -205,57 +213,85 @@ export default {
                 }
                 return;
             }).then((response) => {
-                if (response.status != 200 && response.status != 201) {
-                    alert("200 or 201: " + response.data);
-                    return;
-                } else if (response.status == 200) {
+                if (response === undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
+                if (response.status == 200) {
                     alert("You have already liked this photo");
                     return;
-                } else {
-                    this.have_i_liked_this = true;
+                } else if (response.status == 201) {
                     this.likes++;
+                    this.likesList.push(this.$user_state.username);
                 }
-            });
+                this.have_i_liked_this = true;
+
+            })
         },
 
         async Unlike() {
 
             // Update the state on the server
-            let response = await this.$axios.delete("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {
-                    headers: {
-                    'Content-Type': 'application/json',
-                    'accept': 'application/json',
-                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization
-                    }
-                });
-
-            if (response.status != 200) {
+            await this.$axios.delete("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {
+                headers: {
+                'Content-Type': 'application/json',
+                'accept': 'application/json',
+                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization
+                }
+            }).catch((error) => {
+                if (error.response.status == 403) {
+                    alert("You are not authorized to unlike this photo");
+                } else if (error.response.status == 404) {
+                    alert("Photo not found, cant unlike it");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
                 return;
-            }
+            }).then((response) => {
+                if (response.status != 200) {
+                    alert("Error: " + response.data);
+                    return;
+                }
 
-            this.have_i_liked_this = false;
-            this.likes--;
+                this.have_i_liked_this = false;
+                this.likes--;
+                this.likesList = this.likesList.filter((like) => like != this.$user_state.username);
+            });
         },
 
         async DeleteComment(comment) {
 
             // Update the state on the server
-            let response = await this.$axios.delete("/Images/" + this.photo_id + "/comments/" + comment.commentId,
-                    {
-                    headers: {
-                    'Content-Type': 'application/json',
-                    'accept': 'application/json',
-                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                    }
-                });
+            await this.$axios.delete("/Images/" + this.photo_id + "/comments/" + comment.commentId, {
+                headers: {
+                'Content-Type': 'application/json',
+                'accept': 'application/json',
+                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                }
+            }).then((response) => {
+                if (response === undefined || response.data == null) {
+                    alert("undefined response");
+                    return
+                }
+                if (response.status != 200) {
+                    alert("Error: " + response.data);
+                    return;
+                }
 
-            if (response.status != 200) {
-                alert("Error: " + response.data);
+                // Remove the comment from the array
+                this.comments = this.comments.filter((c) => c.commentId != comment.commentId);
+                this.commentNumber--;
+            }).catch((error) => {
+
+                if (error.response.status == 403) {
+                    alert("You are not authorized to delete this comment", error.response.data);
+                } else if (error.response.status == 404) {
+                    alert("Comment not found, cant delete it");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
                 return;
-            }
-
-            // Remove the comment from the array
-            this.comments = this.comments.filter((c) => c.commentId != comment.commentId);
+            });
         },
     },
 
@@ -272,7 +308,7 @@ export default {
 
     <!-- Bordered Wrapper -->
 
-    <div class="rounded p-2 m-2 border shadow-lg" style="width: 500px;">
+    <div class="rounded p-2 m-4 border shadow-lg" style="width: 500px; ">
         <div class="row align-content-between my-2">
             <div  class="col">
                 <i class="bi-person-circle mx-2" style="font-size: 2em"></i>
@@ -309,9 +345,11 @@ export default {
         <!-- Caption -->
 
         <div class="row">
-            <div class="col-12" style="width: 500px;">
-                <i class="bi-person-circle mx-1" style="font-size: 1.5em"></i>
-                <span class="font-weight-bold h1" style="margin-right: 5px; width: 500px; overflow-y: auto;"> {{ description }}</span>
+            <div class="col-12 post-box" style="width: 500px">
+                <i class="bi-person-circle mx-1"></i>
+                <span class="font-weight-bold h1 post-box" style="font-size: 1.6em;
+                margin-right: 5px; word-break: break-all; overflow-wrap: break-word;"> 
+                {{ description }}</span>
             </div>
         </div>
 
@@ -322,9 +360,9 @@ export default {
         <!-- Comments -->
         <div class="row mt-3 align-content-start justify-content-between">
             <div class="col-auto d-flex align-items-center pb-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#commList">Comments</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" :data-bs-target="'#commList' + post_data">Comments {{ commentNumber }}</button>
             </div>
-            
+
             <div class="col-auto " style="width: max-content;">
                 <LikeCounter class="v-center" :likes_count="this.likes" :liked="this.have_i_liked_this" @like="Like"
                     @unlike="Unlike">
@@ -333,7 +371,7 @@ export default {
             
 
             <div class="col-auto d-flex align-items-center pb-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#likeList">Likes</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" :data-bs-target="'#likeList' + post_data">Likes</button>
             </div>
 
         </div>
@@ -342,7 +380,7 @@ export default {
         <!-- CommentWriter -->
         
         
-        <Modal id="commList" >
+        <Modal :id="'commList' + post_data" >
             <!---->
             <template v-slot:header>
                 
@@ -368,7 +406,7 @@ export default {
                 </div>
             </template>
         </Modal>
-        <Modal id="likeList">
+        <Modal :id="'likeList' + post_data">
             <!---->
             <template v-slot:header>
                 <div class="col-auto d-flex align-items-center pb-2">
@@ -382,9 +420,9 @@ export default {
                         <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No Likes yet.</span>
                     </div>
                     <div v-else class="col-12 my-3">
-                        <Comment v-for="comment in comments" :comment="comment" :key="comment.commentId"
-                            @delete="DeleteComment">
-                        </Comment>
+                        <ul class="list-group">
+                            <li v-for="(like, index) in this.likesList" :key="index" class="list-group">{{ like }}</li>
+                        </ul>
                     </div>
                 </div>
             </template>
@@ -400,6 +438,7 @@ export default {
     display: inline-block;
     vertical-align: middle;
     line-height: normal;
+    align-items: center;
 
 }
 
@@ -409,5 +448,10 @@ export default {
     font-size: 0.8rem;
     width: 120px;
 
+}
+.post-box {
+    word-wrap: break-word;
+    overflow-wrap: break-word; 
+    white-space: pre-line;
 }
 </style>

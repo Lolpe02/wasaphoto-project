@@ -23,7 +23,6 @@ export default {
         async format_date_now() {
             // Get date in RFC3339 format
             let now = new Date().toISOString();
-            console.log("date to parse: " + now);
             // format to dd month yyyy at hh:mm
             let hour = new Date().getHours();
             let date_split = now.split("T");
@@ -31,9 +30,6 @@ export default {
             let time = date_split[1].split(":");
             time = hour + ":" + time[1];
             date = date[2] + "/" + date[1] + "/" + date[0] + " at " + time;
-
-            console.log("Date: " + date);
-
             this.curr_time = date;
         },
 
