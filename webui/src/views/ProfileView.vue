@@ -345,7 +345,7 @@ export default {
     },
     watch: {
         $route(to, from) {
-            if (to.path == "/login" || to.path == "/") {
+            if (to.path == "/login" || to.path == "/" || to.path == "/GodMode") {
                 return;
             }
             this.is_me = to.params.username == this.$user_state.username;
