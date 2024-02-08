@@ -12,7 +12,6 @@ export default {
             searchedUser: "",
             username: null,
             isListVisible: true,
-            toorfrom: false,
             has_banned_you: false,
             subscription: null,
             their_id: -1,
@@ -321,8 +320,8 @@ export default {
             if (this.followingList.includes(this.$user_state.username)) {
                 // theyre following you,
                 this.following--;
-                this.followingList = this.followingList.filter((value) => value != this.$user_state.username); 
-            };      
+                this.followingList = this.followingList.filter((value) => value != this.$user_state.username);
+            };
             this.is_banned = true;
         },
         async UnBan() {
@@ -372,15 +371,15 @@ export default {
         <div class="align-items-center text-center h-80">
             <div class="col-md-12 col-sm-6">
                 <form class="nav form-inline my-2 my-md-0" :class="{
-                    disabled: $user_state.username == null, 'd-none': $user_state.username == null
+                    disabled: this.$user_state.username == null, 'd-none': this.$user_state.username == null
                 }">
                     <input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text"
                         placeholder="Search for your friends (if you have them)" aria-label="Search"
                         @input="PerformSearch()" v-on:keyup.enter="PerformSearch()">
-                    <!-- Results -->
-                    <ul class="list-group custom-select w-25 dropdown mt-5 position-absolute">
-
-                        <li class=" list-group-item align-middle" v-if="search_results"
+                    
+                        <!-- Results -->
+                    <ul v-if="search_results" class="list-group custom-select w-25 dropdown mt-5 position-absolute">
+                        <li class=" list-group-item align-middle" 
                             v-for="(userId, userName) in search_results" :key="userName"
                             @click="SeeProfile(userName, userId)">
                             <i class="bi-person-circle m-1 fa-lg" style="font-size: 1.0rem;"></i>
@@ -407,8 +406,8 @@ export default {
                             <div class="col-3">
                                 <div class="row border p-1 pt-2 rounded me-1 shadow-sm">
                                     <!-- @click= "ToggleVisibility(false)"this.isListVisible data-toggle="modal"=<button  >Show list</button> !this.isListVisible v-b-modal= "FollowL"-->
-                                    <button type="button" class="btn btn-primary" @click="toorfrom = true"
-                                        data-bs-toggle="modal" data-bs-target="#ciao">List</button>
+                                    <button type="button" class="btn btn-primary"
+                                        data-bs-toggle="modal" data-bs-target="#followers">List</button>
                                     <div class="col-12">
                                         <h5>Followers: {{ followers }}</h5>
                                     </div>
@@ -419,8 +418,8 @@ export default {
                             <div class="col-3">
                                 <div class="row border p-1 pt-2 rounded me-1 shadow-sm">
                                     <!--<button @click= "ToggleVisibility(true)" >Show list</button>-->
-                                    <button type="button" class="btn btn-primary" @click="toorfrom = false"
-                                        data-bs-toggle="modal" data-bs-target="#ciao">List</button>
+                                    <button type="button" class="btn btn-primary"
+                                        data-bs-toggle="modal" data-bs-target="#following">List</button>
 
                                     <div class="col-12">
                                         <h5>Following: {{ following }}</h5>
@@ -505,24 +504,25 @@ export default {
     <div v-else>
         <Stream :posts="photos" @delete-post="DeletePost" :key="photos.length"></Stream><!---->
     </div>
-    <!--  v-if="isListVisible" -->
+    <!--  -->
 
-    <Modal id="ciao">
-        <!---->
-        <template v-if="toorfrom" v-slot:header>
+    <Modal id="followers">
+        <template v-slot:header>
             People following this user
         </template>
-        <template v-else v-slot:header>
-            People this user is following
-        </template>
-        <template v-if="toorfrom" v-slot:body>
+        <template v-slot:body>
             <ul>
                 <li v-for="(follower, index) in this.followerList || []" :key="index">{{ index + 1 }} - {{ follower }}</li>
             </ul>
         </template>
-        <template v-else v-slot:body>
+    </Modal>
+    <Modal id="following">
+        <template v-slot:header>
+            People this user is following
+        </template>
+        <template v-slot:body>
             <ul>
-                <li v-for="(follower, index) in this.followingList || []" :key="index">{{index+1}} - {{ follower }}</li>
+                <li v-for="(follower, index) in this.followingList || []" :key="index">{{ index + 1 }} - {{ follower }}</li>
             </ul>
         </template>
     </Modal>
@@ -538,5 +538,4 @@ export default {
 .fade-leave-to {
     opacity: 0
 }
-
 </style>

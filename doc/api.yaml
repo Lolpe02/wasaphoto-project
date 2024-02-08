@@ -100,7 +100,7 @@ components:
           description: list of user's post
           type: array
           items: 
-            $ref: "#/components/schemas/identifier"
+            {$ref: "#/components/schemas/identifier"}
           minItems: 0
           maxItems: 10000
           readOnly: true
@@ -396,8 +396,6 @@ paths:
                 description: 'dictionary of tuples {userName:userId}'
                 type: object
                 example: {"SkibidiSigma420":1,"Mogger":2}
-                minItems: 0
-                maxItems: 10000
         "403":
           $ref: "#/components/responses/UnauthorizedError"
         "500":

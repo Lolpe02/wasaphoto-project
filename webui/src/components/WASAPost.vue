@@ -307,10 +307,10 @@ export default {
     <!-- Bordered Wrapper -->
 
     <div class="rounded p-2 m-4 border shadow-lg" style="width: 500px; ">
-        <div class="row align-content-between my-2">
-            <div  class="col">
+        <div class="row align-content-between my-2 justify-content-center">
+            <div v-if="!is_your_post" class="col">
                 <i class="bi-person-circle mx-2" style="font-size: 2em"></i>
-                <span class="col font-weight-bold h1" v-if="!is_your_post">
+                <span class="col font-weight-bold h1" >
                     {{ creatorname }}
                 </span>
             </div>

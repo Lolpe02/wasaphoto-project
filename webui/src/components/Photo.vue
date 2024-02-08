@@ -41,24 +41,24 @@ export default {
 
             await this.$axios.get("/Images/" + this.src, {
                 responseType: "arraybuffer",
-                headers : {
+                headers: {
                     "Authorization": "Bearer " + this.$user_state.headers.Authorization,
-                    "accept": "image/*",     
+                    "accept": "image/*",
                     "Content-Type": "application/json"
-                }   
+                }
             }).then((response) => {
                 if (response === undefined || response.data == null) {
-                    alert("undefined response" );
+                    alert("undefined response");
                     return
                 }
                 const blob = new Blob([response.data], {
                     type: response.headers["Content-Type"]
                 });
-                 // console.log(response);.headers["Content-Type"]
+                // console.log(response);.headers["Content-Type"]
                 this.src_ = URL.createObjectURL(blob)
                 this.is_loading = false;
             }).catch((error) => {
-                
+
                 if (error.response.status == 401) {
                     this.$router.push("/login");
                 } else if (error.response.status == 404) {
@@ -88,11 +88,10 @@ export default {
 </script>
 
 <template>
-
     <div v-if="!is_loading">
-            <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
+        <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
             :style="(style_ != null ? style_ : '')" />
-        
+
         <!--<button type="button" data-bs-toggle="modal" data-bs-target="#bigimg">
             <Modal id="bigimg" style="{width: 2000}">
             <template v-slot:header> </template>
@@ -106,5 +105,4 @@ export default {
     </div>
 </template>
 
-<style>
-</style>
+<style></style>

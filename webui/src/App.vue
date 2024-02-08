@@ -29,7 +29,7 @@ export default {
 		<div class="col-md-10 col-sm-0 text-light text-truncate d-inline-block">
 			<h5 class="">
 				{{
-					$user_state.username == null ? "Not Logged In" : "Logged in as " + $user_state.username
+					this.$user_state.username == null ? "Not Logged In" : "Logged in as " + this.$user_state.username
 				}}
 			</h5>
 		</div>
