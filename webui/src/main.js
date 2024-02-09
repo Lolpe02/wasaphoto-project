@@ -24,18 +24,16 @@ var state = {
     },
     username: null,
     viewing: null
-
 }
 const views = {
     LOGIN: "login",
-    FEED: "register",
     PROFILE: "profile",
     STREAM: "stream",
 }
 
 app.config.globalProperties.$axios = axios;
 app.config.globalProperties.$views = views;
-app.config.globalProperties.$user_state = reactive(state);
+app.config.globalProperties.$user_state = reactive(state || {}); // Initialize user_state with an empty object if it is undefined
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
 app.component("Modal", Modal);
@@ -53,10 +51,7 @@ app.mount('#app')
 
 
 
-import './assets/dashboard.css'
-import './assets/main.css'
 
-const app = createApp(App)
 
 
 

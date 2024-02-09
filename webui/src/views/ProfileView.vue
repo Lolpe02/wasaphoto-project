@@ -30,7 +30,7 @@ export default {
             }
             this.username = this.$route.params.username;
             this.is_me = this.$route.params.username == this.$user_state.username;
-            this.$user_state.current_view = this.$views.PROFILE;
+            this.$user_state.viewing = this.$views.PROFILE;
             // 
             await this.$axios.get("/Users/profile", {
                 headers: {
@@ -353,11 +353,11 @@ export default {
             this.search_results = null;
             if (to.params.username != from.params.username) {
                 this.has_banned_you = false,
-                    this.is_following = false,
-                    this.is_banned = false,
-                    this.followerList = [],
-                    this.followingList = [],
-                    this.username = null
+                this.is_following = false,
+                this.is_banned = false,
+                this.followerList = [],
+                this.followingList = [],
+                this.username = null
                 this.photos = [];
                 this.refresh();
             };
@@ -375,7 +375,7 @@ export default {
                 }">
                     <input class="form-control" id="SearchBox" v-model="this.searchedUser" type="text"
                         placeholder="Search for your friends (if you have them)" aria-label="Search"
-                        @input="PerformSearch()" v-on:keyup.enter="PerformSearch()">
+                        @input="PerformSearch()">
                     
                         <!-- Results -->
                     <ul v-if="search_results" class="list-group custom-select w-25 dropdown mt-5 position-absolute">

@@ -4,15 +4,14 @@ export default {
         return {
             error: false,
             loading: false,
-            some_data: null,
             isAuthenticated: false,
             $user_state: this.$user_state,
         }
     },
     methods: {
         async initialize() {
-
-            this.$user_state.current_view = this.$views.LOGIN;
+            console.log("Initializing login", this.$user_state);
+            this.$user_state.viewing = this.$views.LOGIN;
             this.$user_state.username = null;
             this.$user_state.headers.Authorization = null;
 
@@ -27,17 +26,6 @@ export default {
                 alert("Invalid username");
                 return;
             }
-
-            /*
-            try {
-                const jsonData = { key: 'value' }; // Replace this with your JSON object
-
-                // Using Axios to send a POST request with JSON data
-                const response = await axios.post('your-api-endpoint', jsonString, );
-
-                console.log('Response:', response.data);
-            } 
-            */
             await this.$axios.post("/session",
                 username, {
                 headers: {
@@ -49,7 +37,7 @@ export default {
                     alert("undefined response");
                     return
                 }
-                 if (response.status == 201) {
+                if (response.status == 201) {
                     // new user created
                     alert("Welcome to the community " + username + "!");
                 } else if (response.status == 200) {

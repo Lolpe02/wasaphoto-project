@@ -91,14 +91,6 @@ export default {
     <div v-if="!is_loading">
         <img :src="src_" :alt="(alt != null ? alt : 'WPimage')" class="shadow-sm rounded img-fluid opacity-100"
             :style="(style_ != null ? style_ : '')" />
-
-        <!--<button type="button" data-bs-toggle="modal" data-bs-target="#bigimg">
-            <Modal id="bigimg" style="{width: 2000}">
-            <template v-slot:header> </template>
-            <template v-slot:body>
-                <img :src="src_" class="shadow-sm rounded img-fluid opacity-100" style="{width: 2000}" @click="ToggleModal"/>
-            </template>
-        </Modal>-->
     </div>
     <div v-else>
         <LoadingSpinner></LoadingSpinner>

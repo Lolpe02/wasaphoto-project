@@ -34,11 +34,9 @@ export default {
 			}
 			this.loading = true;
 			this.errormsg = null;
-			this.$user_state.current_view = this.$views.STREAM;
+			this.$user_state.viewing = this.$views.STREAM;
 
-			const mod = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'))
-			document.body.appendChild(mod._element)
-			this.modal = mod
+			this.modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'));
 
 			await this.$axios.get("/Users/me/myStream", {
 				headers: {
@@ -68,7 +66,7 @@ export default {
 				if (this.fetching) {
 					return;
 				}
-				if (window.innerHeight + window.scrollY >= document.body.offsetHeight && this.$user_state.current_view == this.$views.STREAM) {
+				if (window.innerHeight + window.scrollY >= document.body.offsetHeight && this.$user_state.viewing == this.$views.STREAM) {
 					this.loading = true;
 					this.fetching = true;
 					let newbatch = await this.$axios.get("/Users/me/myStream", {
@@ -230,9 +228,9 @@ export default {
 		}
 	},
 	updated() {
-		const mod = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'))
+		const mod = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'));
 
-		document.body.appendChild(mod._element)
+		document.body.removeChild(mod._element)
 		document.body.removeChild(this.modal._element)
 
 		this.modal = mod
@@ -284,10 +282,10 @@ export default {
 					<!-- Image Input -->
 					<div class="mb-3">
 						<div class="row g-3 align-items-center">
-							<form id="formFile">
+							<form>
 								<label for="fileInput" class="form-label">Upload Image</label>
 								<input class="form-control" type="file" id="fileInput"
-									accept="image/jpeg, img/png, img/gif">
+									accept="image/jpeg, image/png, image/gif">
 
 								<label for="captionInput" class="form-label">Caption</label>
 								<textarea class="form-control" type="text" id="captionInput" rows="6"></textarea>
