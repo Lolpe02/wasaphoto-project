@@ -24,7 +24,7 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 	var res sql.Result
 	res, err = db.c.Exec("DELETE FROM images WHERE userId = ? AND postId = ?;", creator, postId)
 	if err != nil {
-		return err
+		return
 	}
 	var changed int64
 	changed, err = res.RowsAffected()
@@ -53,8 +53,9 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 		}
 		return err
 	}
+
 	// delete the image
-	var path = os.TempDir() + "/wasaPhoto/" + strconv.FormatInt(postId, 10)
+	var path = os.TempDir() + "/wasaPhotos/" + strconv.FormatInt(postId, 10)
 	var names []string
 	names, err = filepath.Glob(path + ".*")
 	if err != nil || names == nil || len(names) == 0 {
@@ -63,8 +64,9 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 		if err != nil {
 			return err
 		}
-		return err
+		return errors.New(NotFound)
 	}
+
 	err = os.Remove(path + "." + strings.Split(names[0], ".")[1])
 	if err != nil {
 		// reinsert the image in the database
@@ -72,6 +74,7 @@ func (db *appdbimpl) Unpost(creator int64, postId int64) (err error) {
 		if err != nil {
 			return err
 		}
+		return err
 	}
 	return
 }

@@ -521,10 +521,10 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/OkDone"
+        "400":
+          $ref: "#/components/responses/UnauthorizedError"
         "401":
           $ref: '#/components/responses/UnauthorizedError'
-        "403":
-          $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":

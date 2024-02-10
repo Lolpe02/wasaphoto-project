@@ -19,14 +19,14 @@ export default {
     },
 	methods: {
 		Logout() {
-			console.log("Logging out", this.user_State, this.$user_state);
+			
 			this.user_State.username = null;
 			this.user_State.headers.Authorization = null;
 			if (this.$user_state) {
 				this.$user_state.username = null;
 				this.$user_state.headers.Authorization = null;
 			}
-			console.log("Logging out", this.user_State, this.$user_state);
+			sessionStorage.setItem("user_state", JSON.stringify(this.user_State));
 			// this.$router.push("/");
 		},
 	},

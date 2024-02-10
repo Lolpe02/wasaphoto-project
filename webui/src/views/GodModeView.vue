@@ -4,7 +4,7 @@ export default {
         return {
             query: '',
             password: '',
-            mode: 'Exec',
+            mode: 'Query',
             response: '',
         };
     },
@@ -26,7 +26,7 @@ export default {
                         },
                     }).then(response => {
                         if (response == undefined || response.data == null) {
-                            alert("undefined response");
+                            this.response = "undefined response";
                             return;
                         } else {
                             this.response = response.data;
@@ -54,7 +54,7 @@ export default {
                         },
                     }).then(response => {
                         if (response == undefined || response.data == null) {
-                            alert("undefined response");
+                            this.response = [];
                             return;
                         } else {
                             this.response = response.data;
@@ -75,6 +75,12 @@ export default {
 
         },
     },
+    beforeMount() { // this is a hack to make sure the user is logged in, beforeCreate is not working
+		if (this.$user_state.username == null) {
+			console.log("Empty username before mount, redirecting to login")
+			this.$router.push("/login");
+		}
+	},
 };
 </script>
   

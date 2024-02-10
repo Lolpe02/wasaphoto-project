@@ -14,6 +14,10 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	if err != nil {
 		// not authenticated, throw unauthorized
 		w.WriteHeader(http.StatusUnauthorized) // 401
+		err = json.NewEncoder(w).Encode("something went wrong with the token" + err.Error())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) // 500
+		}
 		return
 	}
 	// take parameters from the path and turn string to int64
@@ -24,7 +28,6 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusBadRequest) // 400
 		return
 	}
-	// put the comment in the database
 	err = rt.db.Unpost(creator, postId)
 	if err != nil {
 		if err.Error() == NotFound {
@@ -33,16 +36,19 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError) // 500
 			}
-			return
-
-		}
-		// could not create comment, internal server error
-		w.WriteHeader(http.StatusInternalServerError) // 500
-		err = json.NewEncoder(w).Encode("could not delete post " + err.Error())
-		if err != nil {
+		} else {
+			// internal server error
 			w.WriteHeader(http.StatusInternalServerError) // 500
+			err = json.NewEncoder(w).Encode("could not delete post " + err.Error())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError) // 500
+			}
 		}
 		return
 	}
 	w.WriteHeader(http.StatusOK) // 200
+	err = json.NewEncoder(w).Encode("post deleted")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // 500
+	}
 }

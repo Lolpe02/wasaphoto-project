@@ -20,7 +20,7 @@ export default {
             this.intervalId = setInterval(this.format_date_now, 60000);
         },
 
-        async format_date_now() {
+        format_date_now() {
             // Get date in RFC3339 format
             let now = new Date().toISOString();
             // format to dd month yyyy at hh:mm
@@ -34,12 +34,15 @@ export default {
         },
 
         async add_comment() {
-            let text = document.getElementById("comment").value;
+            let text = document.getElementById("comment" + this.photo_id).value;
+            if (text === "") {
+                return;
+            }
             this.$emit('comment', text);
 
             // Clear the text area
 
-            document.getElementById("comment").value = "";
+            document.getElementById("comment" + this.photo_id).value = "";
         },
         beforeDestroy() {
             clearInterval(this.intervalId);
@@ -57,7 +60,7 @@ export default {
     <div class="row mt-3 align-content-start justify-content-between">
 
         <p class="card-text col-8 d-flex">
-            <textarea class="form-control p-1 textarea-width" id="comment" rows="3" placeholder="Leave a Comment!"></textarea>
+            <textarea class="form-control p-1 textarea-width" :id="'comment' + photo_id" rows="3" placeholder="Leave a Comment!"></textarea>
         </p>
         <button type="button" class="btn mx-2 btn-primary col-2" @click="add_comment"
             style="font-size: 0.8em, font-style: italic;">Comment</button>

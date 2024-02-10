@@ -36,7 +36,9 @@ export default {
 			this.errormsg = null;
 			this.$user_state.viewing = this.$views.STREAM;
 
-			this.modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'));
+			const mod = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'))
+            // document.body.appendChild(mod._element)
+            this.modal = mod
 
 			await this.$axios.get("/Users/me/myStream", {
 				headers: {
@@ -107,17 +109,20 @@ export default {
 
 		async UploadPhoto() {
 
-			// Manually set the submit button to be waiting
-
-			document.getElementById("submit-button").innerHTML = "Uploading...";
-			document.getElementById("submit-button").classList.add("disabled");
-
 			const image = document.getElementById("fileInput").files[0];
-
-			if (!image) {
-				alert("Please select a file to upload");
+			const caption = document.getElementById("captionInput").value;
+			if (!image || !caption || caption.length < 1 || caption.length > 300) {
+				alert("Please select a file to upload and a valid caption");
+				console.log(image, caption);
+				// close the modal
+				document.getElementById("fileInput").value = "";
+				document.getElementById("captionInput").value = "";
 				return;
 			}
+
+			// Manually set the submit button to be waiting
+			document.getElementById("submit-button").innerHTML = "Uploading...";
+			document.getElementById("submit-button").classList.add("disabled");
 
 			let reader = new FileReader();
 			let data = null;
@@ -145,7 +150,7 @@ export default {
 			// get format
 			// const format = filename.split('.').pop();
 
-			const caption = document.getElementById("captionInput").value;
+			
 			// strip data:image/png;base64, from the beginning of the string
 
 			data = data.substring(22);
@@ -165,13 +170,14 @@ export default {
 					"accept": "application/json"
 				}
 			}).catch(error => {
-				if (error.response == undefined) {
-					alert("undefined response");
-					return
-				}
+				
 				console.error(error);
 			}).then(response => {
-				console.log(response);
+				if (response === undefined || response.data == null) {
+					alert("Photo upload probably succesful, empty response")
+					this.refresh();
+					return;
+				}
 				if (response.status == 201) {
 
 					// manually restyle and rename the submit button
@@ -196,20 +202,20 @@ export default {
 
 					document.getElementById("fileInput").value = "";
 					document.getElementById("captionInput").value = "";
+					reader = null;
+					data = null;
+					formData = null;
+
+					// dismiss the modal
+					var close = document.getElementById('close-modal');
+					close.click();
 				}
 				else {
 					alert("Error uploading photo")
+					document.getElementById("fileInput").value = "";
+					document.getElementById("captionInput").value = "";
 				}
 			});
-			if (document.getElementById("submit-button").innerHTML == "Uploading...") {
-				setTimeout(() => {
-					// reset the button
-					submit_button.classList.remove("btn-success");
-					submit_button.classList.add("btn-primary");
-					submit_button.innerHTML = "Submit";
-				}, 3000);
-			}
-
 		}
 	},
 	mounted() {
@@ -221,27 +227,21 @@ export default {
 			this.$router.push("/login");
 		}
 	},
-	beforeCreate() {
-		if (this.$user_state.username == null) {
-			console.log("Empty username before create, redirecting to login")
-			this.$router.push("/login");
-		}
-	},
-	updated() {
+	
+	/*updated() {
 		const mod = bootstrap.Modal.getOrCreateInstance(document.getElementById('exampleModal'));
 
-		document.body.removeChild(mod._element)
+		document.body.appendChild(mod._element)
 		document.body.removeChild(this.modal._element)
 
 		this.modal = mod
-	}
+	}*/
 }
 </script>
 
 <template>
 	<div class="container">
-		<div
-			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
 			<h1 class="h2">Home page</h1>
 			<div class="btn-toolbar mb-2 mb-md-0">
 				<div class="btn-group me-2">
@@ -271,6 +271,7 @@ export default {
 		<Stream :posts="feed" :key="feed.length" @delete-post="DeletePost"></Stream>
 	</div>
 	<!-- Modal -->
+	
 	<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 			<div class="modal-content">
@@ -282,7 +283,7 @@ export default {
 					<!-- Image Input -->
 					<div class="mb-3">
 						<div class="row g-3 align-items-center">
-							<form>
+							<form >
 								<label for="fileInput" class="form-label">Upload Image</label>
 								<input class="form-control" type="file" id="fileInput"
 									accept="image/jpeg, image/png, image/gif">
@@ -295,7 +296,7 @@ export default {
 
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-secondary" id="close-modal" data-bs-dismiss="modal">Close</button>
 					<button type="button" class="btn btn-primary" id="submit-button" @click="UploadPhoto()">
 						Submit
 					</button>

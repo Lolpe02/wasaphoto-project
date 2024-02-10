@@ -47,7 +47,7 @@ export default {
                 this.$user_state.headers.Authorization = response.data
                 this.$user_state.username = username
                 this.isAuthenticated = true;
-                // localStorage.setItem("userToken", JSON.stringify(response.data));
+                sessionStorage.setItem("user_state", JSON.stringify(this.$user_state));
                 this.error = false;
                 this.$router.push("/");
             }).catch((error) => {

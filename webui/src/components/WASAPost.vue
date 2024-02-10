@@ -34,44 +34,44 @@ export default {
             this.photo_id = this.post_data;
             await this.$axios.get("/Images/" + this.post_data + "/metadata/",
                 {
-                headers: {
-                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-                }
-            }).then(response => {
-                if (response == undefined || response.data == null) {
-                    alert("undefined response");
-                    return
-                }
-                this.datetime = response.data.date;
-                this.creatorname = response.data.creatorName;
-                this.description = response.data.description;
-                
-                // format to dd month yyyy at hh:mm
-                this.datetime = this.datetime.split("T");
-                let date = this.datetime[0].split("-");
-                let time = this.datetime[1].split(":");
-                time = time[0] + ":" + time[1];
-                this.datetime = date[2] + "/" + date[1] + "/" + date[0] + " at " + time;
-                this.is_your_post = this.creatorname == this.$user_state.username;
-            }).catch((error) => {
-                if (error.response.status == 403) {
-                    alert("You are not authorized to view this photo");
-                } else if (error.response.status == 404) {
-                    alert("Photo not found");
-                } else {
-                    alert("Error: " + error.response.data);
-                }
-                return;
-            });                  
-            
+                    headers: {
+                        'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                        'Content-Type': 'application/json',
+                        'accept': 'application/json',
+                    }
+                }).then(response => {
+                    if (response == undefined || response.data == null) {
+                        alert("undefined response");
+                        return
+                    }
+                    this.datetime = response.data.date;
+                    this.creatorname = response.data.creatorName;
+                    this.description = response.data.description;
+
+                    // format to dd month yyyy at hh:mm
+                    this.datetime = this.datetime.split("T");
+                    let date = this.datetime[0].split("-");
+                    let time = this.datetime[1].split(":");
+                    time = time[0] + ":" + time[1];
+                    this.datetime = date[2] + "/" + date[1] + "/" + date[0] + " at " + time;
+                    this.is_your_post = this.creatorname == this.$user_state.username;
+                }).catch((error) => {
+                    if (error.response.status == 403) {
+                        alert("You are not authorized to view this photo");
+                    } else if (error.response.status == 404) {
+                        alert("Photo not found");
+                    } else {
+                        alert("Error: " + error.response.data);
+                    }
+                    return;
+                });
+
             // Fetch likes
             await this.$axios.get("/Images/" + this.post_data + "/likes/", {
                 headers: {
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                     'Content-Type': 'application/json',
-                    'accept' : 'application/json',
+                    'accept': 'application/json',
                 }
             }).then((response) => {
                 if (response == undefined || response.data == null) {
@@ -143,9 +143,9 @@ export default {
             await this.$axios.post("/Images/" + this.photo_id + "/comments/",
                 text, {
                 headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
             }).then((response) => {
                 if (response == undefined || response.data == null) {
@@ -173,31 +173,36 @@ export default {
         },
 
         async DeletePost() {
-
             // Update the state on the server
-            let response = await this.$axios.delete("/Images/" + this.photo_id,
-                    {
-                    headers: {
-                    'Content-Type': 'application/json',
+            await this.$axios.delete("/Images/" + this.post_data, {
+                headers: {
                     'accept': 'application/json',
                     'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
-                    }
-                    });
-
-            if (response.status != 200) {
-                alert("Error: " + response.data);
+                }
+            }).then((response) => {
+                if (response === undefined || response.data == null) {
+                    alert("undefined response");
+                    
+                }
+                // Remove the post from the stream
+                this.$emit("delete-post", this.post_data);
+            }).catch((error) => {
+                console.log("Error: ", error.response);
+                if (error.response.status == 403) {
+                    alert("You are not authorized to delete this photo");
+                } else if (error.response.status == 404) {
+                    alert("Photo not found, cant delete it");
+                } else {
+                    alert("Error: " + error.response.data);
+                }
                 return;
-            }
-
-            // Remove the post from the stream
-            this.$emit("delete-post", this.post_data);
-
+            });
         },
 
         async Like() {
             await this.$axios.put("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, null, {
                 headers: {
-                    "Authorization": "Bearer " + this.$user_state.headers.Authorization,   
+                    "Authorization": "Bearer " + this.$user_state.headers.Authorization,
                     "accept": "application/json",
                     "Content-Type": "application/json"
                 }
@@ -232,9 +237,9 @@ export default {
             // Update the state on the server
             await this.$axios.delete("/Images/" + this.photo_id + "/likes/" + this.$user_state.headers.Authorization, {
                 headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization
                 }
             }).catch((error) => {
                 if (error.response.status == 403) {
@@ -262,9 +267,9 @@ export default {
             // Update the state on the server
             await this.$axios.delete("/Images/" + this.photo_id + "/comments/" + comment.commentId, {
                 headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-                'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'Authorization': 'Bearer ' + this.$user_state.headers.Authorization,
                 }
             }).then((response) => {
                 if (response === undefined || response.data == null) {
@@ -302,15 +307,13 @@ export default {
 </script>
 
 <template>
-
-
-    <!-- Bordered Wrapper -->
+    <!-- Bordered Wrapper :id="ccc"-->
 
     <div class="rounded p-2 m-4 border shadow-lg" style="width: 500px; ">
         <div class="row align-content-between my-2 justify-content-center">
-            <div v-if="!is_your_post" class="col">
+            <div class="col">
                 <i class="bi-person-circle mx-2" style="font-size: 2em"></i>
-                <span class="col font-weight-bold h1" >
+                <span v-if="!is_your_post" class="col font-weight-bold h1">
                     {{ creatorname }}
                 </span>
             </div>
@@ -338,7 +341,7 @@ export default {
 
         <!-- Divider <hr class="mt-1 mb-4"> -->
 
-        
+
 
         <!-- Caption -->
 
@@ -346,8 +349,8 @@ export default {
             <div class="col-12 post-box" style="width: 500px">
                 <i class="bi-person-circle mx-1"></i>
                 <span class="font-weight-bold h1 post-box" style="font-size: 1.6em;
-                margin-right: 5px; word-break: break-all; overflow-wrap: break-word;"> 
-                {{ description }}</span>
+                margin-right: 5px; word-break: break-all; overflow-wrap: break-word;">
+                    {{ description }}</span>
             </div>
         </div>
 
@@ -358,7 +361,8 @@ export default {
         <!-- Comments -->
         <div class="row mt-3 align-content-start justify-content-between">
             <div class="col-auto d-flex align-items-center pb-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" :data-bs-target="'#commList' + post_data">Comments {{ commentNumber }}</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    :data-bs-target="'#commList' + post_data">Comments {{ commentNumber }}</button>
             </div>
 
             <div class="col-auto " style="width: max-content;">
@@ -366,29 +370,31 @@ export default {
                     @unlike="Unlike">
                 </LikeManager>
             </div>
-            
+
 
             <div class="col-auto d-flex align-items-center pb-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" :data-bs-target="'#likeList' + post_data">Likes</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    :data-bs-target="'#likeList' + post_data">Likes</button>
             </div>
 
         </div>
-            
-        
+
+
         <!-- CommentManager -->
-        
-        
-        <Modal :id="'commList' + post_data" >
+
+
+        <Modal :id="'commList' + post_data">
             <!---->
             <template v-slot:header>
-                
-                    <div class="col-16">
-                        <CommentManager id="comment-writer" :photo_id="this.photo_id" :author_name="this.creatorname" @comment="AddComment">
-                        </CommentManager>
-                    </div>
-                
+
+                <div class="col-16">
+                    <CommentManager id="commentwriter" :photo_id="this.photo_id"
+                        :author_name="this.creatorname" @comment="AddComment">
+                    </CommentManager>
+                </div>
+
             </template>
-            <template  v-slot:body>
+            <template v-slot:body>
                 <div class="row">
                     <div v-if="comments.length == 0" class="col-12 align-content-center w-100"><!-- Center the text -->
                         <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No comments yet.</span>
@@ -409,10 +415,10 @@ export default {
             <template v-slot:header>
                 <div class="col-auto d-flex align-items-center pb-2">
                     <i class="bi-chat"> Who liked this post</i>
-                    
+
                 </div>
             </template>
-            <template  v-slot:body>
+            <template v-slot:body>
                 <div class="row">
                     <div v-if="likes == 0" class="col-12 align-content-center w-100"><!-- Center the text -->
                         <span class="h5 mx-1 font-weight-bold align-middle text-muted text-center">No Likes yet.</span>
@@ -426,8 +432,6 @@ export default {
             </template>
         </Modal>
     </div>
-
-
 </template>
 
 <style>
@@ -447,9 +451,10 @@ export default {
     width: 120px;
 
 }
+
 .post-box {
     word-wrap: break-word;
-    overflow-wrap: break-word; 
+    overflow-wrap: break-word;
     white-space: pre-line;
 }
 </style>

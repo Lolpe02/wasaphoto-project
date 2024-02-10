@@ -7,7 +7,7 @@ export default {
         return {
             author: this.comment.creator,
             created_at: this.comment.date,
-            cid: this.comment.commentId,
+            id: this.comment.commentId,
             text: this.comment.content,
         }
     },
