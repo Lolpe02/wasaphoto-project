@@ -1,5 +1,5 @@
 FROM golang:1.19.4 as builder
-WORKDIR /src
+WORKDIR /src/
 COPY  . .
 RUN go build -o /tmp/webapi ./cmd/webapi
 
